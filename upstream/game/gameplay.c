@@ -94,6 +94,10 @@ void CVort_handle_cheat_keys() {
     }
 }
 
+#ifdef ESP32_PORT
+void port_level_loop(void); // ESP32-PORT: port/game_main.c
+#endif
+
 void CVort_main() {
     if (engine_gameVersion == GAMEVER_KEEN1) {
         snprintf(game_ext, sizeof(game_ext), "CK1");
@@ -230,7 +234,11 @@ void CVort_main() {
     g_game.anim_speed = 7;
     CVort_ptr_engine_setTicksSync(0);
     CVort_ptr_engine_setTicks(0);
+#ifdef ESP32_PORT // ESP32-PORT: no menus/world map yet; play level 1 in a loop
+    port_level_loop();
+#else
     CVort_main_loop();
+#endif
 }
 
 int16_t CVort_add_sprite() {

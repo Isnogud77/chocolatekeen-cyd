@@ -43,4 +43,3 @@ JoystickPoll_T CVort_engine_pollJoystick(int16_t joystickNum) {
 bool CVort_engine_isJoystickInUse() { return false; }
 
 void CVort_engine_handleQuit() { STUB_ONCE(); }
-void CVort_engine_updateInputStatus() { STUB_ONCE(); } // real one in Task 5
