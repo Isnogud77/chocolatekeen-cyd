@@ -1,0 +1,141 @@
+// Playfield renderer: palette, blits, clipping, present window.
+#include <unity.h>
+#include <string.h>
+#include "core/globals.h"
+#include "render.h"
+
+/* --- capture port_present; other fakes come from test_support/ --- */
+static const uint8_t *presentSrc;
+static int presentStride;
+static uint16_t presentPal[16];
+void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]) {
+    presentSrc = src;
+    presentStride = stride;
+    memcpy(presentPal, pal565, sizeof presentPal);
+}
+
+/* --- test buffer with guard bytes around the playfield --- */
+#define GUARD 64
+static uint8_t buf[GUARD + PF_W * PF_H + GUARD];
+
+/* 32x16 test sprite (width 4 bytes): every pixel color 3, no mask. */
+static uint8_t spritePix[32 * 16];
+static uint8_t *spriteTable[1];
+static MaskedSpriteEntry_T spriteEntries[4];
+
+/* tile 0: color 5; tile 1: all-0xFF mask for tile 0 */
+static uint8_t tilePix[2 * 256];
+static uint8_t *tileTable[2];
+static uint16_t animIdentity[2] = {0, 1}; // normally set by level init
+
+static int guardsIntact(void) {
+    for (int i = 0; i < GUARD; i++)
+        if (buf[i] != 0xAA || buf[GUARD + PF_W * PF_H + i] != 0xAA) return 0;
+    return 1;
+}
+
+void setUp(void) {
+    TEST_ASSERT_TRUE(render_init());
+    memset(buf, 0xAA, sizeof buf);
+    pf = buf + GUARD;
+    memset(pf, 7, PF_W * PF_H);
+
+    memset(spritePix, 3, sizeof spritePix);
+    spriteTable[0] = spritePix;
+    for (int i = 0; i < 4; i++) { spriteEntries[i].width = 4; spriteEntries[i].height = 16; }
+    engine_egaSprites = spriteTable;
+    engine_maskedSpriteEntry = spriteEntries;
+
+    memset(tilePix, 5, 256);
+    memset(tilePix + 256, 0xFF, 256);
+    tileTable[0] = tilePix;
+    tileTable[1] = tilePix + 256;
+    engine_egaTiles = tileTable;
+    for (int i = 0; i < 4; i++) anim_plane[i] = animIdentity;
+    anim_plane_i = 0;
+
+    engine_dstPage = 0;
+}
+void tearDown(void) {}
+
+static uint8_t at(int x, int y) { return pf[y * PF_W + x]; }
+
+static void test_rgb565_white(void) { TEST_ASSERT_EQUAL_HEX16(0xFFFF, ega_to_rgb565(0x3F)); }
+static void test_rgb565_black(void) { TEST_ASSERT_EQUAL_HEX16(0x0000, ega_to_rgb565(0x00)); }
+static void test_rgb565_red(void) { TEST_ASSERT_EQUAL_HEX16(0xA800, ega_to_rgb565(0x04)); }
+static void test_rgb565_brown(void) { TEST_ASSERT_EQUAL_HEX16(0xAAA0, ega_to_rgb565(0x06)); }
+// 200-line mode: secondary green (bit 4) acts as intensity -> light red.
+static void test_rgb565_light_red(void) { TEST_ASSERT_EQUAL_HEX16(0xFAAA, ega_to_rgb565(0x14)); }
+
+static void test_tile_at_origin(void) {
+    CVort_engine_drawTile(4, 32, 0);
+    TEST_ASSERT_EQUAL_UINT8(5, at(0, 0));
+    TEST_ASSERT_EQUAL_UINT8(5, at(15, 15));
+    TEST_ASSERT_EQUAL_UINT8(7, at(16, 0));
+    TEST_ASSERT_EQUAL_UINT8(7, at(0, 16));
+}
+
+static void test_masked_tile_keeps_background(void) {
+    CVort_engine_drawTile(4, 32, 0x8000 | 0);
+    TEST_ASSERT_EQUAL_UINT8(7, at(0, 0));
+}
+
+static void test_sprite_clipped_right_bottom(void) {
+    // (45<<3) + (1<<1) = 362 -> pf_x 330; y 252 -> pf_y 220
+    CVort_engine_drawSprite(45, 252, 1);
+    TEST_ASSERT_EQUAL_UINT8(3, at(330, 220));
+    TEST_ASSERT_EQUAL_UINT8(3, at(335, 223));
+    TEST_ASSERT_EQUAL_UINT8(7, at(0, 221)); // no wrap into next row
+    TEST_ASSERT_TRUE(guardsIntact());
+}
+
+static void test_sprite_clipped_left_top(void) {
+    // x byte 2 -> buffer x 16 -> pf_x -16; y 24 -> pf_y -8
+    CVort_engine_drawSprite(2, 24, 0);
+    TEST_ASSERT_EQUAL_UINT8(3, at(0, 0));
+    TEST_ASSERT_EQUAL_UINT8(3, at(15, 7));
+    TEST_ASSERT_EQUAL_UINT8(7, at(16, 0));
+    TEST_ASSERT_EQUAL_UINT8(7, at(0, 8));
+    TEST_ASSERT_TRUE(guardsIntact());
+}
+
+static void test_sprite_mask_keeps_background(void) {
+    spritePix[0] = 16; // mask only
+    CVort_engine_drawSprite(4, 32, 0);
+    TEST_ASSERT_EQUAL_UINT8(7, at(0, 0));
+    TEST_ASSERT_EQUAL_UINT8(3, at(1, 0));
+}
+
+static void test_present_window_max_fine(void) {
+    scroll_x = scroll_y = 0x0F00;
+    CVort_engine_egaPageFlip();
+    CVort_private_engine_setEgaMemStartLocAndPanning(engine_egaStart, pel_panning);
+    render_present();
+    TEST_ASSERT_EQUAL_PTR(pf + 15 * PF_W + 15, presentSrc);
+    TEST_ASSERT_EQUAL_INT(PF_W, presentStride);
+}
+
+static void test_palette_applies(void) {
+    uint8_t palette[17] = {0x3F, 1, 2, 3, 4, 5, 6, 7, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0};
+    CVort_engine_setPaletteAndBorderColor(palette);
+    render_present();
+    TEST_ASSERT_EQUAL_HEX16(0xFFFF, presentPal[0]);
+    TEST_ASSERT_EQUAL_HEX16(0xA800, presentPal[4]);
+}
+
+int main(void) {
+    UNITY_BEGIN();
+    RUN_TEST(test_rgb565_white);
+    RUN_TEST(test_rgb565_black);
+    RUN_TEST(test_rgb565_red);
+    RUN_TEST(test_rgb565_brown);
+    RUN_TEST(test_rgb565_light_red);
+    RUN_TEST(test_tile_at_origin);
+    RUN_TEST(test_masked_tile_keeps_background);
+    RUN_TEST(test_sprite_clipped_right_bottom);
+    RUN_TEST(test_sprite_clipped_left_top);
+    RUN_TEST(test_sprite_mask_keeps_background);
+    RUN_TEST(test_present_window_max_fine);
+    RUN_TEST(test_palette_applies);
+    return UNITY_END();
+}

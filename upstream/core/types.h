@@ -240,7 +240,11 @@ typedef struct {
     struct {
         // The following is used to simulate the state of EGA video memory
         // in graphics mode, allocating one indexed-color byte per pixel.
+#ifdef ESP32_PORT // ESP32-PORT: no emulated EGA memory (393 KB); port/render.c draws into its own playfield
+        uint8_t byteEgaMemory[1];
+#else
         uint8_t byteEgaMemory[ENGINE_EGA_MEMORY_IN_BITS];
+#endif
         // The state of EGA memory in text mode
         uint8_t egaTxtMemory[ENGINE_EGA_TEXTUAL_MEMORY_IN_BYTES];
 

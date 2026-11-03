@@ -40,7 +40,9 @@ typedef void *SDL_GLContext;
 typedef struct { int dummy; } SDL_RendererInfo;
 typedef struct { int x, y, w, h; } SDL_Rect;
 typedef struct SDL_Joystick SDL_Joystick;
-#define SDL_NUM_SCANCODES 512
+// Upstream sizes its SDL key-mapping table by this; the port maps the
+// controller directly to DOS scancodes, so the table is never used.
+#define SDL_NUM_SCANCODES 1
 
 // Time comes from the port backend.
 uint32_t port_millis(void);
