@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "backend.h"
+#include "pcspeaker.h"
 
 static SDL_Window *window;
 static SDL_Renderer *renderer;
@@ -13,8 +14,41 @@ static SDL_Texture *texture;
 static uint16_t screen[320 * 240];
 static SDL_AudioDeviceID audioDev; // 0 until audio is opened
 
+// SDL audio thread: advance the PC speaker every 6868 us of samples and
+// write a square wave at its frequency. SDL holds the device lock here.
+static void audioCallback(void *userdata, Uint8 *stream, int len) {
+    (void)userdata;
+    static uint32_t usInTick = PCSPK_TICK_US; // tick on the first sample
+    static uint32_t hz;
+    static uint64_t phase; // in units of 1/(2*44100) cycles
+    int16_t *out = (int16_t *)stream;
+    for (int i = 0; i < len / 2; i++) {
+        usInTick += 1000000u / 44100u;
+        if (usInTick >= PCSPK_TICK_US) {
+            usInTick -= PCSPK_TICK_US;
+            hz = pcspeaker_divisor_to_hz(pcspeaker_tick_locked());
+        }
+        if (!hz) { out[i] = 0; continue; }
+        phase += 2 * (uint64_t)hz;
+        out[i] = ((phase / 44100) & 1) ? -3000 : 3000;
+    }
+}
+
+static void openAudio(void) {
+    SDL_AudioSpec want = {0}, got;
+    want.freq = 44100;
+    want.format = AUDIO_S16SYS;
+    want.channels = 1;
+    want.samples = 512;
+    want.callback = audioCallback;
+    audioDev = SDL_OpenAudioDevice(NULL, 0, &want, &got, 0);
+    if (!audioDev) { port_log("audio: %s (continuing silently)", SDL_GetError()); return; }
+    SDL_PauseAudioDevice(audioDev, 0);
+}
+
 void port_init(void) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) port_fatal(SDL_GetError());
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) port_fatal(SDL_GetError());
+    openAudio();
     window = SDL_CreateWindow("keen-esp32 (host)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 960, 720, 0);
     renderer = SDL_CreateRenderer(window, -1, 0);
     SDL_RenderSetLogicalSize(renderer, 320, 240);
