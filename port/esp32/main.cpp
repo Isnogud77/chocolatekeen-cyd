@@ -1,18 +1,19 @@
-// ESP32 entry point. The game task comes in Task 6.
+// ESP32 entry point: run the game in its own task with a large stack.
 #include <Arduino.h>
 #include "backend.h"
 
-extern "C" uint16_t CVort_draw_level(uint16_t levelnum);
-extern "C" void CVort_engine_prepareEpisodeSpecificFuncPointers(void);
+extern "C" void port_game_run(void);
+
+static void gameTask(void *) {
+    port_game_run(); // never returns
+    vTaskDelete(nullptr);
+}
 
 void setup() {
     Serial.begin(115200);
-    port_report_heap("boot");
-    // Keeps game code linked so the size report is real; never true.
-    if (millis() == 0xFFFFFFFFu) {
-        CVort_engine_prepareEpisodeSpecificFuncPointers();
-        CVort_draw_level(1);
-    }
+    delay(200);
+    port_log("keen-esp32 starting");
+    xTaskCreatePinnedToCore(gameTask, "keen", 16384, nullptr, 1, nullptr, 1);
 }
 
-void loop() { delay(1000); }
+void loop() { vTaskDelay(portMAX_DELAY); }
