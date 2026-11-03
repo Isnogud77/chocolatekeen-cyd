@@ -3,3 +3,5 @@
 .DS_Store
 .superpowers/
 assets/*.ppm
+assets/*.png
+tools/assetdump/assetdump
