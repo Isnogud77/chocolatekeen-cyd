@@ -152,3 +152,17 @@ flash file shim. Reuse fitting tests from upstream `tests/`.
 
 Chocolate Keen is GPL-2.0; this port stays GPL-2.0. Episode 1 is shareware and its data
 files ship with upstream.
+
+## Revisions after reading upstream (2026-11-03)
+
+Found while writing the implementation plan; these override the sections above.
+
+1. The asset converter is a C tool reusing upstream decoders (`lz.c`, `Cunlzexe.c`,
+   `decompGraphics` logic) instead of a Python script.
+2. The framebuffer is a 336×224 playfield (75 KB): upstream draws a 21×14 tile grid and
+   scrolls 0–15 px inside it. The 320×200 window is cut out at present time.
+3. The whole unpacked `KEEN1.EXE` image lives in flash instead of extracted tables;
+   upstream only writes to it on big-endian hosts.
+4. `map_data` shrinks from 64 KB to 40 KB; the largest Keen 1 level unpacks to 39 456 bytes.
+5. Testing steps 3 and 4 merge, because `CVort_draw_level` runs scrolling, Keen and
+   enemies together.
