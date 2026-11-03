@@ -7,6 +7,7 @@
 #include <esp_timer.h>
 #include <stdarg.h>
 #include "backend.h"
+#include "mcp23017.h"
 
 namespace {
 
@@ -21,11 +22,17 @@ uint16_t *strips[2];
 bool i2cFailing = false;
 uint32_t fpsCount = 0, fpsSince = 0;
 
-void mcpWrite(uint8_t reg, uint8_t val) {
-    Wire.beginTransmission(kMcpAddr);
-    Wire.write(reg);
-    Wire.write(val);
-    Wire.endTransmission();
+uint32_t mcpLastInit = 0;
+
+// Write the full register setup (see mcp23017.h for why it is repeated).
+void mcpInit() {
+    for (int i = 0; i < mcp_init_count; i++) {
+        Wire.beginTransmission(kMcpAddr);
+        Wire.write(mcp_init_seq[i].reg);
+        Wire.write(mcp_init_seq[i].val);
+        Wire.endTransmission();
+    }
+    mcpLastInit = millis();
 }
 
 } // namespace
@@ -45,10 +52,7 @@ void port_init(void) {
     tft.startWrite(); // keep the SPI bus for DMA; only the display uses it
 
     Wire.begin(kSdaPin, kSclPin, 400000);
-    mcpWrite(0x00, 0xFF); // IODIRA: inputs
-    mcpWrite(0x01, 0xFF); // IODIRB: inputs
-    mcpWrite(0x0C, 0xFF); // GPPUA: pullups
-    mcpWrite(0x0D, 0xFF); // GPPUB: pullups
+    mcpInit();
     fpsSince = millis();
 }
 
@@ -56,6 +60,7 @@ uint32_t port_millis(void) { return (uint32_t)(esp_timer_get_time() / 1000); }
 void port_sleep_ms(uint32_t ms) { delay(ms); }
 
 uint8_t port_read_buttons(void) {
+    if (mcp_reinit_due(mcpLastInit, millis())) mcpInit();
     Wire.beginTransmission(kMcpAddr);
     Wire.write(0x12); // GPIOA
     bool ok = Wire.endTransmission(false) == 0 && Wire.requestFrom(kMcpAddr, (uint8_t)1) == 1;
@@ -66,7 +71,8 @@ uint8_t port_read_buttons(void) {
     }
     if (i2cFailing) port_log("controller: I2C back");
     i2cFailing = false;
-    return (uint8_t)(~Wire.read() & 0x3F); // active low; GPA0..5 = PORT_BTN_*
+    uint8_t raw = Wire.read();
+    return (uint8_t)(~raw & 0x3F); // active low; GPA0..5 = PORT_BTN_*
 }
 
 void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]) {
