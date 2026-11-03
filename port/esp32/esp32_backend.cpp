@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include "backend.h"
 #include "mcp23017.h"
+#include "pcspeaker.h"
 
 namespace {
 
@@ -16,6 +17,7 @@ constexpr uint8_t kMcpAddr = 0x20;
 constexpr int kStripLines = 20;                 // 10 strips per 200-line frame
 constexpr int kStripPixels = 320 * kStripLines; // 12 800 bytes per buffer
 constexpr int kTopOffset = 20;                  // center 200 lines on 240
+constexpr int kSpeakerPin = 26;
 
 TFT_eSPI tft;
 uint16_t *strips[2];
@@ -36,6 +38,29 @@ void mcpInit() {
     mcpLastInit = millis();
 }
 
+// esp_timer task, every 6.868 ms: advance the PC speaker, retune the PWM.
+void speakerTick(void *) {
+    static uint32_t lastHz = 0;
+    port_audio_lock();
+    uint32_t hz = pcspeaker_divisor_to_hz(pcspeaker_tick_locked());
+    port_audio_unlock(); // no LEDC call inside the critical section
+    if (hz != lastHz) {
+        ledcWriteTone(kSpeakerPin, hz); // 0 = off; 50 % duty square wave
+        lastHz = hz;
+    }
+}
+
+void startSpeaker() {
+    ledcAttach(kSpeakerPin, 1000, 8);
+    ledcWriteTone(kSpeakerPin, 0);
+    esp_timer_create_args_t args = {};
+    args.callback = speakerTick;
+    args.name = "pcspeaker";
+    esp_timer_handle_t timer;
+    if (esp_timer_create(&args, &timer) != ESP_OK || esp_timer_start_periodic(timer, PCSPK_TICK_US) != ESP_OK)
+        port_log("sound: timer start failed, playing silently");
+}
+
 } // namespace
 
 extern "C" {
@@ -54,6 +79,7 @@ void port_init(void) {
 
     Wire.begin(kSdaPin, kSclPin, 400000);
     mcpInit();
+    startSpeaker();
     fpsSince = millis();
 }
 
