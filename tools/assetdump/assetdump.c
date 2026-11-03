@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
     fclose(out);
 
     /* --- raw files read through the fopen shim --- */
-    static const char *rawFiles[] = {"LEVEL01.CK1", "LEVEL14.CK1"}; // 14: large level, used by tests
+    static const char *rawFiles[] = {"LEVEL01.CK1", "LEVEL14.CK1", "SOUNDS.CK1"}; // 14: large level, used by tests
     const int nRaw = sizeof rawFiles / sizeof rawFiles[0];
     out = openOut("keen1_files.c");
     fprintf(out, "#include \"keen1_assets.h\"\n\n");

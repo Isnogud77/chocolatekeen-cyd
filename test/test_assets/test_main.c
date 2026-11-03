@@ -37,6 +37,14 @@ static void test_level01_present(void) {
     TEST_ASSERT_EQUAL_UINT32(10112, unpacked);
 }
 
+static void test_sounds_present(void) {
+    const AssetFile_T *f = find("SOUNDS.CK1");
+    TEST_ASSERT_NOT_NULL(f);
+    TEST_ASSERT_EQUAL_UINT32(8898, f->size);
+    TEST_ASSERT_EQUAL_MEMORY("SND\0", f->data, 4);
+    TEST_ASSERT_EQUAL_UINT16(60, f->data[8] | f->data[9] << 8);
+}
+
 static void test_level_fits_map_data(void) {
     TEST_ASSERT_TRUE(10112 <= 0xA000);
 }
@@ -51,6 +59,7 @@ int main(void) {
     RUN_TEST(test_tile_pixels_are_ega_indices);
     RUN_TEST(test_sprite_pixels_in_range);
     RUN_TEST(test_level01_present);
+    RUN_TEST(test_sounds_present);
     RUN_TEST(test_level_fits_map_data);
     RUN_TEST(test_exe_unpacked);
     return UNITY_END();
