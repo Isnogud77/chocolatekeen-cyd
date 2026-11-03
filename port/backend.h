@@ -27,6 +27,9 @@ void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]);
 void port_log(const char *fmt, ...);
 void port_report_heap(const char *where);
 _Noreturn void port_fatal(const char *msg);
+// Guards state shared with the audio timer/callback (pcspeaker.c).
+void port_audio_lock(void);
+void port_audio_unlock(void);
 
 #ifdef __cplusplus
 }

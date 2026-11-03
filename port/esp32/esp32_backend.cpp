@@ -21,6 +21,7 @@ TFT_eSPI tft;
 uint16_t *strips[2];
 bool i2cFailing = false;
 uint32_t fpsCount = 0, fpsSince = 0;
+portMUX_TYPE audioMux = portMUX_INITIALIZER_UNLOCKED;
 
 uint32_t mcpLastInit = 0;
 
@@ -55,6 +56,9 @@ void port_init(void) {
     mcpInit();
     fpsSince = millis();
 }
+
+void port_audio_lock(void) { portENTER_CRITICAL(&audioMux); }
+void port_audio_unlock(void) { portEXIT_CRITICAL(&audioMux); }
 
 uint32_t port_millis(void) { return (uint32_t)(esp_timer_get_time() / 1000); }
 void port_sleep_ms(uint32_t ms) { delay(ms); }

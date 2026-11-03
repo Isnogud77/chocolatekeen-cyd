@@ -11,6 +11,7 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
 static uint16_t screen[320 * 240];
+static SDL_AudioDeviceID audioDev; // 0 until audio is opened
 
 void port_init(void) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) port_fatal(SDL_GetError());
@@ -20,6 +21,9 @@ void port_init(void) {
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 320, 240);
     if (!window || !renderer || !texture) port_fatal(SDL_GetError());
 }
+
+void port_audio_lock(void) { if (audioDev) SDL_LockAudioDevice(audioDev); }
+void port_audio_unlock(void) { if (audioDev) SDL_UnlockAudioDevice(audioDev); }
 
 uint32_t port_millis(void) { return SDL_GetTicks(); }
 void port_sleep_ms(uint32_t ms) { SDL_Delay(ms); }

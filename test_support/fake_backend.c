@@ -14,3 +14,5 @@ WEAK void CK_PlatformSleepMs(unsigned int ms) { (void)ms; }
 WEAK void port_init(void) {}
 WEAK void port_report_heap(const char *where) { (void)where; }
 WEAK void port_fatal(const char *msg) { (void)msg; for (;;) {} }
+WEAK void port_audio_lock(void) {}
+WEAK void port_audio_unlock(void) {}
