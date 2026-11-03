@@ -60,6 +60,8 @@ void port_game_run(void) {
     engine_gameTicksStart = 0;
     CVort_private_engine_setTicks(0);
 
+    g_game.want_sound = 1; // upstream sets this from its config menu, which the port lacks
+
     port_report_heap("boot");
     CVort_main(); // ends in port_level_loop(), never returns
 }

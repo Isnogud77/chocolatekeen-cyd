@@ -25,4 +25,7 @@ typedef struct { const char *name; const uint8_t *data; uint32_t size; } AssetFi
 extern const AssetFile_T keen1_files[];
 extern const int keen1_filesCount;
 
+// Case-insensitive lookup (port/file_shim.c); NULL if missing.
+const AssetFile_T *port_find_asset(const char *name);
+
 #endif

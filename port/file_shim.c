@@ -4,9 +4,14 @@
 #include <strings.h>
 #include "keen1_assets.h"
 
-FILE *port_fopen_asset(const char *name) {
+const AssetFile_T *port_find_asset(const char *name) {
     for (int i = 0; i < keen1_filesCount; i++)
         if (!strcasecmp(keen1_files[i].name, name))
-            return fmemopen((void *)keen1_files[i].data, keen1_files[i].size, "rb");
+            return &keen1_files[i];
     return NULL;
+}
+
+FILE *port_fopen_asset(const char *name) {
+    const AssetFile_T *f = port_find_asset(name);
+    return f ? fmemopen((void *)f->data, f->size, "rb") : NULL;
 }

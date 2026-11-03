@@ -13,13 +13,6 @@ uint16_t CK_PlatformPreferredPlayer1ControlType(uint16_t currentControlType, int
 }
 void CK_PlatformSleepMs(unsigned int ms) { port_sleep_ms(ms); }
 
-// No sound in v1.
-void CVort_engine_finishCurSound() { STUB_ONCE(); }
-void CVort_engine_loadSounds() { STUB_ONCE(); }
-void CVort_engine_restoreCurSound() { STUB_ONCE(); }
-void CVort_engine_saveCurSound() { STUB_ONCE(); }
-void CVort_engine_setCurSound(uint16_t sound) { (void)sound; STUB_ONCE(); }
-
 // Keyboard control only (the controller is mapped to keys).
 GameInput_T CVort_engine_getJoystickCtrl(int16_t joy_id) {
     (void)joy_id;
