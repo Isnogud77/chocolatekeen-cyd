@@ -18,6 +18,7 @@
 uint16_t CVort_private_continue_game(void);
 uint16_t CVort_demo_toggle_prepare_to_record(void);
 
+#ifndef ESP32_PORT // ESP32-PORT: SDL event loops not used
 static bool clear_keys_and_check_for_quit(void) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) { // Clear keys
@@ -68,6 +69,8 @@ static bool check_for_user_input_and_quit(void) {
     }
     return false;
 }
+
+#endif // ESP32_PORT
 
 void CVort_engine_prepareEpisodeSpecificFuncPointers(void) {
     size_t numOfTiles;
@@ -169,6 +172,7 @@ static void ensure_keen_version_info_initialized(void) {
     }
 }
 
+#ifndef ESP32_PORT // ESP32-PORT: EXE image is in flash (assets/keen1_exe.c)
 static bool load_exe_image(gameversion_T gameVer, uint8_t **pExeImageBuffer) {
     uint8_t *wholeExeData;
     ensure_keen_version_info_initialized();
@@ -369,3 +373,5 @@ void CVort_engine_loadKeen(gameversion_T gameVer) {
 void CVort_engine_freeEXE(uint8_t *exeImageBuffer) {
     free(exeImageBuffer);
 }
+
+#endif // ESP32_PORT

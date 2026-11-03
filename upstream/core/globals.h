@@ -567,7 +567,7 @@ typedef struct {
     extern uint8_t demo_actions_including_level_num[5001];
     extern uint8_t *demo_action_ptr, *end_of_demo_ptr, *demo_after_last_byte_char_offset;
 
-    extern int16_t map_data[0x10000 / 2], *map_data_tiles, *map_data_sprites;
+    extern int16_t map_data[0xA000 / 2] /* ESP32-PORT: 40 KB, largest Keen 1 level unpacks to 39456 B */, *map_data_tiles, *map_data_sprites;
     extern int16_t map_width_tile, map_height_tile, map_width_bytes;
     extern uint16_t screen_wrap_single;
     //extern uint16_t screen_wrap;

@@ -48,50 +48,21 @@ void CVort_engine_prepareGameDataFilePathBuffers(gameversion_T gameVer) {
     }
 }
 
-FILE *CVort_engine_cross_ro_data_fopen(const char *filename) {
-    char platformPath[1024];
-    char externalPlatformPath[1024];
-    FILE *fp;
+// ESP32-PORT: game data is served from flash arrays; there is no writable storage.
+FILE *port_fopen_asset(const char *name);
 
-    if (!engine_gameDataFullPathBuffer) {
-        return NULL;
-    }
-    // Data-file lookup currently assumes uppercase DOS-style short names.
-    char *ptr = engine_gameDataFullPathBuffer + engine_gameDataPrefixLen;
-    strncpy(ptr, filename, 13);
-    for (size_t loopVar = 0; loopVar < strlen(ptr); loopVar++) {
-        ptr[loopVar] = toupper(ptr[loopVar]);
-    }
-    if (CK_PlatformBuildExternalGameDataPath(engine_gameDataFullPathBuffer, externalPlatformPath, sizeof(externalPlatformPath))) {
-        fp = fopen(externalPlatformPath, "rb");
-        if (fp) {
-            return fp;
-        }
-    }
-    if (!CK_PlatformBuildRoDataPath(engine_gameDataFullPathBuffer, platformPath, sizeof(platformPath))) {
-        return NULL;
-    }
-    return fopen(platformPath, "rb");
+FILE *CVort_engine_cross_ro_data_fopen(const char *filename) {
+    return port_fopen_asset(filename);
 }
 
 FILE *CVort_engine_cross_rw_misc_fopen(const char *filename, const char *mode) {
-    char platformPath[1024];
-
-    CK_PlatformEnsureRwMiscDir();
-    if (!CK_PlatformBuildRwMiscPath(filename, platformPath, sizeof(platformPath))) {
-        return NULL;
-    }
-    return fopen(platformPath, mode);
+    (void)filename; (void)mode;
+    return NULL;
 }
 
 FILE *CVort_engine_configpath_fopen(const char *filename, const char *mode) {
-    char platformPath[1024];
-
-    CK_PlatformEnsureRwMiscDir();
-    if (!CK_PlatformBuildRwMiscPath(filename, platformPath, sizeof(platformPath))) {
-        return NULL;
-    }
-    return fopen(platformPath, mode);
+    (void)filename; (void)mode;
+    return NULL;
 }
 
 size_t CVort_engine_cross_freadInt8LE(void *ptr, size_t count, FILE *stream) {
