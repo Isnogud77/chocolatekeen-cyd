@@ -56,6 +56,7 @@ void port_init(void) {
     if (!window || !renderer || !texture) port_fatal(SDL_GetError());
 }
 
+bool port_audio_available(void) { return audioDev != 0; }
 void port_audio_lock(void) { if (audioDev) SDL_LockAudioDevice(audioDev); }
 void port_audio_unlock(void) { if (audioDev) SDL_UnlockAudioDevice(audioDev); }
 

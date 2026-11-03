@@ -28,6 +28,7 @@ constexpr uint8_t kSpeakerAmplitude = 16;
 constexpr uint32_t kSpeakerMaxHz = 5000; // caps the toggle interrupt at 10 kHz
 hw_timer_t *toneTimer;
 volatile bool toneHigh;
+bool speakerRunning = false; // both timers started
 
 TFT_eSPI tft;
 uint16_t *strips[2];
@@ -92,8 +93,11 @@ void startSpeaker() {
     args.callback = speakerTick;
     args.name = "pcspeaker";
     esp_timer_handle_t timer;
-    if (esp_timer_create(&args, &timer) != ESP_OK || esp_timer_start_periodic(timer, PCSPK_TICK_US) != ESP_OK)
+    if (esp_timer_create(&args, &timer) != ESP_OK || esp_timer_start_periodic(timer, PCSPK_TICK_US) != ESP_OK) {
         port_log("sound: timer start failed, playing silently");
+        return;
+    }
+    speakerRunning = true;
 }
 
 } // namespace
@@ -118,6 +122,7 @@ void port_init(void) {
     fpsSince = millis();
 }
 
+bool port_audio_available(void) { return speakerRunning; }
 void port_audio_lock(void) { portENTER_CRITICAL(&audioMux); }
 void port_audio_unlock(void) { portEXIT_CRITICAL(&audioMux); }
 

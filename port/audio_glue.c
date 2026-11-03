@@ -9,8 +9,13 @@ static bool soundReady, soundPaused;
 
 void CVort_engine_loadSounds(void) {
     const AssetFile_T *f = port_find_asset("SOUNDS.CK1");
-    soundReady = f && pcspeaker_init(f->data, f->size);
     soundPaused = false;
+    if (!port_audio_available()) {
+        soundReady = false; // nothing would ever tick the player
+        port_log("sound: no audio output, playing silently");
+        return;
+    }
+    soundReady = f && pcspeaker_init(f->data, f->size);
     if (!soundReady)
         port_log("sound: SOUNDS.CK1 missing or bad, playing silently");
 }

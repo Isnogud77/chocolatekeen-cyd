@@ -2,6 +2,7 @@
 #ifndef PORT_BACKEND_H
 #define PORT_BACKEND_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -30,6 +31,8 @@ _Noreturn void port_fatal(const char *msg);
 // Guards state shared with the audio timer/callback (pcspeaker.c).
 void port_audio_lock(void);
 void port_audio_unlock(void);
+// True if the backend's audio tick source runs (otherwise sounds never end).
+bool port_audio_available(void);
 
 #ifdef __cplusplus
 }
