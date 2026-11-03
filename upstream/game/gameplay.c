@@ -457,7 +457,11 @@ void CVort_load_level_data(uint16_t levelnum) {
     // Here, code from Commander Genius is used as-is
     CRLE_expandSwapped((word*)map_data, compressedMapData, 0xFEFE);
     // We remove the initial DWORD of uncompressed data size
+#ifdef ESP32_PORT // ESP32-PORT: count is in bytes; upstream passed elements (half), harmless only with the 64 KB array
+    memmove(map_data, map_data+1, sizeof(map_data)-sizeof(int16_t));
+#else
     memmove(map_data, map_data+1, sizeof(map_data)/sizeof(int16_t)-2);
+#endif
     // NOTE: Are byteswaps required for the Big-Endian architectures?
     // (Apparently not)
 
