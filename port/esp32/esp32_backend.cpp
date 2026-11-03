@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <esp_heap_caps.h>
 #include <esp_timer.h>
+#include <hal/dac_ll.h>
 #include <stdarg.h>
 #include "backend.h"
 #include "mcp23017.h"
@@ -17,7 +18,16 @@ constexpr uint8_t kMcpAddr = 0x20;
 constexpr int kStripLines = 20;                 // 10 strips per 200-line frame
 constexpr int kStripPixels = 320 * kStripLines; // 12 800 bytes per buffer
 constexpr int kTopOffset = 20;                  // center 200 lines on 240
-constexpr int kSpeakerPin = 26;
+constexpr int kSpeakerPin = 26;        // DAC_CHAN_1
+// Volume: the DAC square wave swings 0 .. amplitude (full would be 255).
+// The CYD amplifier is very loud, so we keep it well below full.
+// Silence = 0, like the PC speaker at rest (no DC jump when a tone starts).
+// The faint "flimmern" between sounds comes from the board (also there with
+// plain PWM), not from this code.
+constexpr uint8_t kSpeakerAmplitude = 16;
+constexpr uint32_t kSpeakerMaxHz = 5000; // caps the toggle interrupt at 10 kHz
+hw_timer_t *toneTimer;
+volatile bool toneHigh;
 
 TFT_eSPI tft;
 uint16_t *strips[2];
@@ -38,21 +48,46 @@ void mcpInit() {
     mcpLastInit = millis();
 }
 
-// esp_timer task, every 6.868 ms: advance the PC speaker, retune the PWM.
+// Hardware timer interrupt at twice the tone frequency: flip the DAC level.
+void IRAM_ATTR onToneHalfPeriod() {
+    toneHigh = !toneHigh;
+    dac_ll_update_output_value(DAC_CHAN_1, toneHigh ? kSpeakerAmplitude : 0);
+}
+
+void setTone(uint32_t hz) {
+    timerStop(toneTimer);
+    if (!hz) {
+        dac_ll_update_output_value(DAC_CHAN_1, 0); // silence = 0 V
+        return;
+    }
+    if (hz > kSpeakerMaxHz) hz = kSpeakerMaxHz;
+    toneHigh = false; // wave starts from the resting 0 level
+    timerAlarm(toneTimer, 500000u / hz, true, 0); // half period in us (1 MHz timer)
+    timerWrite(toneTimer, 0);
+    timerStart(toneTimer);
+}
+
+// esp_timer task, every 6.868 ms: advance the PC speaker, retune the tone.
 void speakerTick(void *) {
     static uint32_t lastHz = 0;
     port_audio_lock();
     uint32_t hz = pcspeaker_divisor_to_hz(pcspeaker_tick_locked());
-    port_audio_unlock(); // no LEDC call inside the critical section
+    port_audio_unlock(); // no timer calls inside the critical section
     if (hz != lastHz) {
-        ledcWriteTone(kSpeakerPin, hz); // 0 = off; 50 % duty square wave
+        setTone(hz);
         lastHz = hz;
     }
 }
 
 void startSpeaker() {
-    ledcAttach(kSpeakerPin, 1000, 8);
-    ledcWriteTone(kSpeakerPin, 0);
+    dacWrite(kSpeakerPin, 0); // set up the DAC pad; later writes go to the register
+    toneTimer = timerBegin(1000000);
+    if (!toneTimer) {
+        port_log("sound: tone timer failed, playing silently");
+        return;
+    }
+    timerAttachInterrupt(toneTimer, onToneHalfPeriod);
+    timerStop(toneTimer);
     esp_timer_create_args_t args = {};
     args.callback = speakerTick;
     args.name = "pcspeaker";

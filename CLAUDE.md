@@ -5,7 +5,7 @@
 - Hintergrundbeleuchtung: GPIO 21 (falls dunkel: GPIO 27 prüfen)
 - MCP23017 an CN1: SDA = GPIO 22, SCL = GPIO 27, Adresse 0x20
 - Controller (MCP23017, active low, Pullups an): GPA0 = Links, GPA1 = Rechts, GPA2 = Hoch, GPA3 = Runter, GPA4 = Taste 1, GPA5 = Taste 2
-- Lautsprecher: DAC an GPIO 26 (aktuell keiner angeschlossen)
+- Lautsprecher: DAC an GPIO 26, angeschlossen. Verstärker sehr laut; leises "Flimmern" kommt von der Platine (auch mit reinem PWM), nicht aus dem Code
 - SD-Karte: onboard- MCP23017 bekommt bei Hot-Plug Müll in die Register (gesehen: IPOLA = IOCON = 0x7A), ohne I2C-Fehler. Deshalb volle Register-Init alle 1 s (port/mcp23017.c).
 
 ## Chocolate-Keen-Port
@@ -17,7 +17,8 @@
   - Debug-Hilfen: `KEEN_AUTO=RJ` (Knöpfe per Skript), `KEEN_DUMP=frame%02d.ppm` (Bilder speichern)
 - Gerät: `pio run -e cyd -t upload`, Serial 115200 auf /dev/cu.usbserial-120
 
-## Messwerte Level 1 (2026-11-03)
+## Messwerte Level 1 (2026-11-03, Sound 2026-11-04)
 - fps 24.3 stabil, 10 min ohne Reset
-- Heap nach Boot: 49 644 B frei, größter Block 29 684 B
-- Statischer RAM 105 088 B, Flash 880 794 B von 1 310 720 B
+- Heap nach Boot: 49 180 B frei (mit Sound), größter Block 29 684 B
+- Statischer RAM 105 136 B, Flash 907 814 B von 1 310 720 B
+- Sound: DAC-Rechteck 0..16 (`kSpeakerAmplitude` in port/esp32/esp32_backend.cpp), Ton-Timer max. 5 kHz
