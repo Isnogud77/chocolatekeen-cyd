@@ -9,6 +9,9 @@
 uint32_t port_millis(void) { static uint32_t t; return t += 20; }
 
 void setUp(void) {
+    // Timing as port_game_run sets it; 0 makes CVort_engine_delay divide by
+    // zero (traps on x86 Linux, silently 0 on Apple Silicon).
+    engine_refreshTimeInMicroSec = ((int64_t)1000000) * ENGINE_EGAVGA_REFRESHRATE_SCALE_FACTOR / ENGINE_EGA_REFRESHRATE_SCALED;
     snprintf(game_ext, sizeof(game_ext), "CK1");
     TEST_ASSERT_TRUE(render_init());
     render_image_mode_off();
