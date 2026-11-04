@@ -105,7 +105,7 @@ extern "C" {
 
 void port_init(void) {
     tft.init();
-    tft.setRotation(1);
+    tft.setRotation(screen_layout_portrait() ? 0 : 1); // 0 = upright in the Galagino cabinet
     tft.fillScreen(TFT_BLACK);
     tft.setSwapBytes(false); // we write big-endian RGB565 ourselves
     tft.initDMA();
@@ -147,6 +147,12 @@ uint8_t port_read_buttons(void) {
 void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]) {
     uint16_t pal[16];
     for (int i = 0; i < 16; i++) pal[i] = (uint16_t)((pal565[i] >> 8) | (pal565[i] << 8)); // SPI byte order
+    static int lastMode = -1;
+    if ((int)layout->mode != lastMode) { // bars differ per mode: clear once
+        tft.dmaWait();
+        tft.fillScreen(TFT_BLACK);
+        lastMode = layout->mode;
+    }
     for (int y0 = 0, n = 0; y0 < layout->outH; y0 += kStripLines, n++) {
         int lines = layout->outH - y0 < kStripLines ? layout->outH - y0 : kStripLines; // last strip may be short
         uint16_t *dst = strips[n & 1]; // DMA sends one buffer while we fill the other
