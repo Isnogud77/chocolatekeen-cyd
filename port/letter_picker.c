@@ -39,6 +39,8 @@ uint8_t letter_picker_step(uint8_t e, bool slotFree) {
     if (!s_active) return 0;
     if (!s_finishing) {
         if (e & PORT_BTN_JUMP) {
+            // Enter must never be dropped: overwrite the newest entry if full.
+            if (s_qn == QLEN) s_qn--;
             push(SC_ENTER);
             s_finishing = true;
         } else if (e & (PORT_BTN_UP | PORT_BTN_DOWN)) {

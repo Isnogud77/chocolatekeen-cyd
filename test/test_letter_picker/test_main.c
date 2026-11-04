@@ -58,6 +58,15 @@ static void test_queued_edges_not_dropped(void) {
     TEST_ASSERT_FALSE(letter_picker_active());
 }
 
+static void test_full_queue_still_ends_with_enter(void) {
+    for (int i = 0; i < 20; i++) letter_picker_step(PORT_BTN_UP, false); // never consumed
+    letter_picker_step(PORT_BTN_JUMP, false);
+    bool sawEnter = false;
+    for (int i = 0; i < 40 && !sawEnter; i++) sawEnter = letter_picker_step(0, true) == 0x1C;
+    TEST_ASSERT_TRUE(sawEnter);
+    TEST_ASSERT_FALSE(letter_picker_active());
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_scancodes_for_letters);
@@ -66,5 +75,6 @@ int main(void) {
     RUN_TEST(test_right_commits_and_starts_at_a);
     RUN_TEST(test_queued_edges_not_dropped);
     RUN_TEST(test_b1_emits_enter_and_stops);
+    RUN_TEST(test_full_queue_still_ends_with_enter);
     return UNITY_END();
 }
