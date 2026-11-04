@@ -31,6 +31,19 @@ use the `cyd_portrait` env for its upright cabinet.
 
 Wiring, the full pin map and what every control does: **[docs/controls.md](docs/controls.md)**.
 
+## Check your wiring first
+
+`hwtest/` is a small standalone firmware for a new build:
+
+```sh
+pio run -d hwtest -e color -t upload   # cycles 4 colour variants: pick the correct one
+pio run -d hwtest -e cyd -t upload     # shows which MCP23017 pins are pressed
+```
+
+The `cyd` test prints every pin change on the serial monitor and lights a box
+per pin on screen, so you can see that every joystick direction and button
+reaches the right GPA pin (see [docs/controls.md](docs/controls.md)).
+
 ## Build and flash
 
 You need [PlatformIO](https://platformio.org/) (CLI or the VS Code extension).
@@ -40,7 +53,8 @@ pio run -e cyd -t upload            # landscape cabinet
 pio run -e cyd_portrait -t upload   # upright (portrait) cabinet
 ```
 
-If the board is on a different serial port, add `--upload-port /dev/...`.
+PlatformIO finds the board's serial port by itself; if you have several, add
+`--upload-port /dev/...`.
 The serial monitor runs at 115200 baud and logs fps and free heap.
 
 To wipe saves and high scores: `pio run -e cyd -t erase`, then upload again.

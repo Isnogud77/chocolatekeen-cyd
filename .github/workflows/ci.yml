@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install PlatformIO and SDL2
+        run: |
+          pip install platformio
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'hwtest/platformio.ini') }}
+      - name: Unit tests (host)
+        run: pio test -e test
+      - name: Build firmware and host builds
+        run: pio run -e cyd -e cyd_portrait -e host -e host_portrait
+      - name: Build hardware test
+        run: pio run -d hwtest

@@ -17,7 +17,7 @@
 - Mac build ("fake CYD", SDL2): `pio run -e host && .pio/build/host/program` (arrows, Z = button 1, X = button 2, Esc = quit)
   - Debug aids: `KEEN_AUTO` (scripted buttons, see port/host/host_backend.c), `KEEN_DUMP=frame%02d.ppm` (save frames), `KEEN_TEXT_PROBE=1` (forces text frames → scaled portrait layout)
 - Portrait (Galagino-style upright cabinet): envs `host_portrait` / `cyd_portrait` (`-DKEEN_PORTRAIT=1`); gameplay is a 240x200 window following Keen, text frames are scaled 3:4
-- Device: `pio run -e cyd -t upload` (portrait: `-e cyd_portrait`), serial 115200. The port name depends on the USB socket (seen: /dev/cu.usbserial-120, -2140): pass `--upload-port <port>` then
+- Device: `pio run -e cyd -t upload` (portrait: `-e cyd_portrait`), serial 115200. PlatformIO autodetects the port; it depends on the USB socket (seen: /dev/cu.usbserial-120, -2140) — pass `--upload-port <port>` if needed
 - Controls, pin map, saving and how to add buttons: docs/controls.md
 - Saves/scores: port/save_store.c over port_store_* (ESP32 NVS namespace `keen`; host `~/.keen-esp32/`). Autosave slot `SAVED1.CK1`
 

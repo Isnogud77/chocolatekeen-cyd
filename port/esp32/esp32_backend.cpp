@@ -223,7 +223,10 @@ void port_fatal(const char *msg) {
     tft.setTextColor(TFT_WHITE, TFT_RED);
     tft.drawString("FATAL", 10, 10, 2);
     tft.drawString(msg, 10, 30, 2);
-    for (;;) delay(1000);
+    tft.drawString("Restarting in 10 s", 10, 50, 2);
+    delay(10000); // an arcade cabinet should come back by itself
+    esp_restart();
+    for (;;) {}
 }
 
 } // extern "C"
