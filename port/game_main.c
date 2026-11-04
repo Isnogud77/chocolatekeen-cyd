@@ -1,37 +1,16 @@
 // Boots the game the way upstream CVort_engine_loadKeen() does, then runs
-// level 1 in a loop (upstream CVort_main calls port_level_loop at its end).
+// upstream's front end (CVort_main -> CVort_main_loop: logo, title, menu,
+// world map, levels, ending), which never returns.
 #include "core/globals.h"
 #include "engine/engine_timing.h"
 #include "keen1_assets.h"
 #include "backend.h"
-#include "input_map.h"
 #include "render.h"
 #include "screen_layout.h"
 
 // Upstream defines these without a header declaration.
 void CVort_engine_prepareEpisodeSpecificFuncPointers(void);
 uint16_t CVort_private_continue_game(void);
-
-void port_level_loop(void) {
-    input_init_scancodes();
-    for (;;) {
-        // New-game state, as in upstream CVort_do_intro_and_menu (Keen 1).
-        g_game.resuming_saved_game = 0;
-        keen_gp.lives = 4;
-        keen_gp.ammo = 0;
-        memset(keen_gp.stuff, 0, sizeof(keen_gp.stuff));
-        memset(keen_gp.targets, 0, sizeof(keen_gp.targets));
-        memset(keen_gp.levels, 0, sizeof(keen_gp.levels));
-        g_game.extra_life_pts = 0;
-        g_entities.sprites[0].pos_x = 0;
-        g_entities.sprites[0].pos_y = 0;
-        g_game.anim_speed = 3;
-
-        uint16_t result = CVort_draw_level(1);
-        port_log("level 1 ended: %u (finished %d, quit %d, lives %d, keen type %d)", result, g_game.level_finished, g_game.quit_to_title, keen_gp.lives, g_entities.sprites[0].type_);
-        port_report_heap("level end");
-    }
-}
 
 #ifndef KEEN_PORTRAIT
 #define KEEN_PORTRAIT 0 // build envs *_portrait set 1
@@ -69,5 +48,5 @@ void port_game_run(void) {
     g_game.want_sound = 1; // upstream sets this from its config menu, which the port lacks
 
     port_report_heap("boot");
-    CVort_main(); // ends in port_level_loop(), never returns
+    CVort_main(); // ends in CVort_main_loop(), never returns
 }

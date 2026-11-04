@@ -300,7 +300,7 @@ void CVort_do_intro_and_menu() {
             if (CVort_has_any_ack_press(&currInput) || g_game.intro_complete)
                 break;
         }
-        g_game.intro_complete = 0;
+            g_game.intro_complete = 0;
         if ((scroll_x >> 16) || ((scroll_x & 0xFFFF) != 0x2000))
             CVort_fade_out();
         //if (CVort_draw_title(introTickCounter))
@@ -350,7 +350,11 @@ loc_192F8:
     {
         if (!sel) // Already on top? Then we cycle to the bottom.
         {
+#ifdef ESP32_PORT // ESP32-PORT: arcade menu has 5 rows (0-4)
+            sel = 4;
+#else
             sel = 7;
+#endif
             CVort_engine_drawChar(cursorX, cursorY << 3, ' ');
         } else {
             sel--;
@@ -383,7 +387,11 @@ loc_192F8:
         CVort_clear_keys();
     } else if (input.direction == 4) // Move down
     {
+#ifdef ESP32_PORT // ESP32-PORT: arcade menu has 5 rows (0-4)
+        if (sel >= 4) // Already on bottom?
+#else
         if (sel >= 7) // Already on bottom?
+#endif
         {
             sel = 0;
             CVort_engine_drawChar(cursorX, cursorY << 3, ' ');
@@ -437,6 +445,35 @@ select1:
 
     CVort_clear_keys();
     CVort_engine_delay(8);
+#ifdef ESP32_PORT // ESP32-PORT: rows 0 New Game, 1 Continue (no saves yet: ignored, cursor stays), 2 Story, 3 Help, 4 High Scores
+    switch (sel) {
+        case 0:
+            bg = 1;
+            break;
+        case 1:
+            goto loc_192C0;
+        case 2:
+            bg = 0;
+            CVort_do_story();
+            break;
+        case 3: // as F1 on the title: viewer over the menu, no fades
+            bg = 0;
+            CVort_do_help();
+            break;
+        case 4:
+            bg = 0;
+            CVort_fade_out();
+            CVort_show_scores();
+            CVort_fade_out();
+            break;
+        default:
+            bg = 0;
+            break;
+    }
+    if (!bg)
+        goto loc_19297;
+    return bg;
+#endif
     switch (sel) {
         case 0:
             bg = 1;
@@ -485,6 +522,20 @@ select1:
 }
 
 void CVort_draw_menu() {
+#ifdef ESP32_PORT // ESP32-PORT: arcade menu: 5 items (upstream has no disabled-text style, so Continue is plain)
+    CVort_draw_box_opening_main(0x12, 0x7);
+    cursorX_b = cursorX;
+    cursorY_b = cursorY;
+    CVort_draw_string("   New Game\n");
+    CVort_draw_string("   Continue Game\n");
+    CVort_draw_string("   Story\n");
+    CVort_draw_string("   Help\n");
+    CVort_draw_string("   High Scores\n\n");
+    CVort_draw_string("Use the joystick");
+    cursorX = cursorX_b + 1;
+    cursorY = cursorY_b;
+    return;
+#endif
     CVort_draw_box_opening_main(0x12, 0xA);
     cursorX_b = cursorX;
     cursorY_b = cursorY;

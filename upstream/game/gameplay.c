@@ -10,8 +10,9 @@
 #include <inttypes.h>
 
 #include "core/globals.h"
-#ifdef ESP32_PORT // ESP32-PORT: render_image_mode_off
+#ifdef ESP32_PORT // ESP32-PORT: render_image_mode_off, port_fatal
 #include "render.h"
+#include "backend.h"
 #endif
 #include "play_context.h" // ESP32-PORT: play context markers
 #include "input/actions.h"
@@ -97,10 +98,6 @@ void CVort_handle_cheat_keys() {
         CVort_engine_restoreCurSound();
     }
 }
-
-#ifdef ESP32_PORT
-void port_level_loop(void); // ESP32-PORT: port/game_main.c
-#endif
 
 void CVort_main() {
     if (engine_gameVersion == GAMEVER_KEEN1) {
@@ -238,11 +235,7 @@ void CVort_main() {
     g_game.anim_speed = 7;
     CVort_ptr_engine_setTicksSync(0);
     CVort_ptr_engine_setTicks(0);
-#ifdef ESP32_PORT // ESP32-PORT: no menus/world map yet; play level 1 in a loop
-    port_level_loop();
-#else
     CVort_main_loop();
-#endif
 }
 
 int16_t CVort_add_sprite() {
@@ -496,6 +489,9 @@ void CVort_load_level_data(uint16_t levelnum) {
 void CVort_handle_quit() {
     CVort_clear_keys();
     if (g_game.current_level == 90) {
+#ifdef ESP32_PORT // ESP32-PORT: on the title already; there is no DOS to quit to
+        return;
+#endif
         CVort_draw_box_opening_main(0xC, 1);
         CVort_draw_string("Quit (Y/N)?");
         if (CVort_engine_toupper(CVort_read_char_with_echo()) != 'Y')
@@ -510,7 +506,7 @@ void CVort_handle_quit() {
     {
         case 'D':
         case 'N': // Vita alias: Square defaults to 'N'
-            CVort_chg_vid_and_error("");
+            CVort_chg_vid_and_error(""); // ESP32-PORT: lands in the title (see CVort_chg_vid_and_error)
             break;
         case 'T':
         case 'Y': // Vita alias: Cross defaults to 'Y'
@@ -643,6 +639,12 @@ int16_t CVort_calc_jump_height(uint16_t max_height) {
 }
 
 void CVort_chg_vid_and_error(const char *msg) {
+#ifdef ESP32_PORT // ESP32-PORT: no DOS: an error halts with the message, a plain quit goes to the title
+    if (*msg)
+        port_fatal(msg);
+    CVort_engine_handleQuit();
+    return;
+#endif
     CVort_engine_setVideoMode(CVORT_VIDEO_MODE_TEXT);
     if (!(*msg)) {
         CVort_save_ctrls();

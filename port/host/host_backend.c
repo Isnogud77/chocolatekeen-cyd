@@ -75,11 +75,22 @@ static void pumpEvents(void) {
 }
 
 // KEEN_AUTO (debug aid): "R" holds right, "J" jumps every 1.5 s, "P" pogo toggles every 4 s.
+// "M" (menu script): nothing for 3 s, button 1 for 300 ms every 2 s until 13 s
+// (logo, title, New Game, ...), then the R/J autoplay; until 25 s down is
+// also tapped (150 ms every 1.5 s), which walks Keen from his map start to
+// level 1 (down-right of it).
 static uint8_t autoButtons(void) {
     const char *a = getenv("KEEN_AUTO");
     if (!a) return 0;
     uint32_t t = SDL_GetTicks();
     uint8_t b = 0;
+    if (strchr(a, 'M')) {
+        if (t < 3000) return 0;
+        if (t < 13000) return (t - 3000) % 2000 < 300 ? PORT_BTN_JUMP : 0;
+        b |= PORT_BTN_RIGHT;
+        if (t < 25000 && t % 1500 >= 700 && t % 1500 < 850) b |= PORT_BTN_DOWN;
+        if (t % 1500 < 300) b |= PORT_BTN_JUMP;
+    }
     if (strchr(a, 'R')) b |= PORT_BTN_RIGHT;
     if (strchr(a, 'J') && t % 1500 < 300) b |= PORT_BTN_JUMP;
     if (strchr(a, 'P') && t % 4000 < 100) b |= PORT_BTN_POGO;
@@ -94,14 +105,16 @@ uint8_t port_read_buttons(void) {
            (k[SDL_SCANCODE_Z] ? PORT_BTN_JUMP : 0) | (k[SDL_SCANCODE_X] ? PORT_BTN_POGO : 0);
 }
 
-// KEEN_DUMP=<path>: write the latest frame as PPM every 30 presents (debug aid).
-// A "%d" in the path is replaced by the dump number.
+// KEEN_DUMP=<path>: write the latest frame as PPM every 30 presents (debug aid;
+// KEEN_DUMP_EVERY=<n> changes the 30). A "%d" in the path is replaced by the dump number.
 static void dumpFrame(void) {
     static int count;
     const char *path = getenv("KEEN_DUMP");
-    if (!path || ++count % 30) return;
+    const char *everyEnv = getenv("KEEN_DUMP_EVERY");
+    int every = everyEnv && atoi(everyEnv) > 0 ? atoi(everyEnv) : 30;
+    if (!path || ++count % every) return;
     char name[512];
-    snprintf(name, sizeof name, path, count / 30);
+    snprintf(name, sizeof name, path, count / every);
     FILE *f = fopen(name, "wb");
     if (!f) return;
     fprintf(f, "P6\n%d %d\n255\n", scrW, scrH);

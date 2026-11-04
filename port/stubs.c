@@ -35,4 +35,6 @@ JoystickPoll_T CVort_engine_pollJoystick(int16_t joystickNum) {
 }
 bool CVort_engine_isJoystickInUse() { return false; }
 
-void CVort_engine_handleQuit() { STUB_ONCE(); }
+// Upstream exits to DOS here (plain quit from CVort_chg_vid_and_error); a
+// cabinet has no DOS, so the game returns to the title instead.
+void CVort_engine_handleQuit() { g_game.quit_to_title = 1; }
