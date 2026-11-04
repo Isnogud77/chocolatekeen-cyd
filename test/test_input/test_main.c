@@ -5,6 +5,7 @@
 #include "backend.h"
 #include "input_map.h"
 #include "play_context.h"
+#include "letter_picker.h"
 #include "input/actions.h"
 
 static uint8_t g_testButtons;
@@ -27,6 +28,20 @@ static int pressedCount(void) {
     int n = 0;
     for (size_t i = 0; i < sizeof g_input.key_map / sizeof g_input.key_map[0]; i++) n += g_input.key_map[i] != 0;
     return n;
+}
+
+static void test_picker_overrides_menu_mapping(void) {
+    play_context_set(false, false);
+    letter_picker_start();
+    input_apply_buttons_at(PORT_BTN_UP, 0);
+    TEST_ASSERT_EQUAL_HEX16(0x1E | 0x80, g_input.key_scane);
+    TEST_ASSERT_EQUAL(0, g_input.key_map[0x48]);
+    g_input.key_scane = 0;
+    input_apply_buttons_at(PORT_BTN_UP | PORT_BTN_JUMP, 10);
+    TEST_ASSERT_EQUAL_HEX16(0x1C | 0x80, g_input.key_scane);
+    TEST_ASSERT_EQUAL(0, g_input.key_map[0x15]);
+    TEST_ASSERT_EQUAL(0, g_input.key_map[0x1C]);
+    letter_picker_stop();
 }
 
 static void test_diagonal_left_up(void) {
@@ -153,6 +168,7 @@ static void test_update_down_hold_status_action(void) {
 
 int main(void) {
     UNITY_BEGIN();
+    RUN_TEST(test_picker_overrides_menu_mapping);
     RUN_TEST(test_diagonal_left_up);
     RUN_TEST(test_both_buttons);
     RUN_TEST(test_release_clears);

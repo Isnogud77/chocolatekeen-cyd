@@ -4,6 +4,7 @@
 #include "backend.h"
 #include "input/actions.h"
 #include "input_map.h"
+#include "letter_picker.h"
 #include "play_context.h"
 
 enum { SC_UP = 0x48, SC_RIGHT = 0x4D, SC_DOWN = 0x50, SC_LEFT = 0x4B, SC_CTRL = 0x1D, SC_ALT = 0x38,
@@ -41,6 +42,15 @@ void input_apply_buttons_at(uint8_t mask, uint32_t nowMs) {
     uint8_t pressed = mask & ~s_prev;
     for (int b = 0; b < 8; b++) {
         if (pressed & (1 << b)) { s_pressAt[b] = nowMs; }
+    }
+    if (letter_picker_active()) {
+        // The name entry owns the controls: only picker events, nothing held.
+        static const uint8_t held[] = {SC_UP, SC_DOWN, SC_LEFT, SC_RIGHT, SC_CTRL, SC_ALT, SC_ENTER, SC_ESC, SC_SPACE, SC_Y, SC_N};
+        for (size_t k = 0; k < sizeof held; k++) g_input.key_map[held[k]] = 0;
+        uint8_t sc = letter_picker_step(pressed);
+        if (sc) key_event(sc);
+        s_prev = mask;
+        return;
     }
     bool play = play_context_in_play();
     bool level = play_context_in_level();

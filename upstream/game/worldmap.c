@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include "core/globals.h"
 #include "input/actions.h"
+#include "letter_picker.h" // ESP32-PORT: high score letter picker
 #include "episodes/episode1.h"
 #include "episodes/episode2.h"
 #include "episodes/episode3.h"
@@ -407,7 +408,10 @@ void CVort_game_over() {
             strncpy(high_scores_table.names[loopVar + 1], high_scores_table.names[loopVar], sizeof(high_scores_table.names[loopVar]));
         }
         CVort_clear_keys();
+        // ESP32-PORT: no keyboard; the joystick letter picker feeds key events to the name entry loop.
+        letter_picker_start();
         CVort_get_string_input(high_scores_table.names[scoreEntry], 12);
+        letter_picker_stop();
         high_scores_table.scores[scoreEntry] = keen_gp.score;
         high_scores_table.parts[scoreEntry][0] = keen_gp.stuff[0];
         high_scores_table.parts[scoreEntry][1] = keen_gp.stuff[4];
