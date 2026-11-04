@@ -5,3 +5,4 @@
 assets/*.ppm
 assets/*.png
 tools/assetdump/assetdump
+cad/parts/
