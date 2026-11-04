@@ -431,6 +431,8 @@ typedef struct {
     uint16_t CVort_read_char_with_echo();
     bool CVort_isWaitingForCharInput(void);
     void CVort_test_setWaitingForCharInput(bool waiting); // ESP32-PORT: test seam (ui.c)
+    void CVort_test_setKeyWaitActive(bool waiting); // ESP32-PORT: test seam (ui.c)
+    bool CVort_test_keyWaitActive(void);            // ESP32-PORT: test seam (ui.c)
     void CVort_draw_string(const char *str);
     void CVort_draw_number_word(uint16_t value);
     void CVort_draw_number_dword(uint32_t value);

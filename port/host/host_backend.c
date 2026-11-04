@@ -113,6 +113,8 @@ static uint8_t autoButtons(void) {
         if (t < 3000) return 0;
         // With D/X Keen stands still 1.5 s before the hold (and nothing else is pressed after it).
         if ((strchr(a, 'D') || strchr(a, 'X')) && t >= keenAutoAt() - 1500) {
+            // With B, button 1 is pressed 1 s after the hold ends (closes the status screen).
+            if (strchr(a, 'B') && t >= keenAutoAt() + 2400 && t < keenAutoAt() + 2700) return PORT_BTN_JUMP;
             if (t < keenAutoAt() || t >= keenAutoAt() + 1400) return 0;
             return strchr(a, 'D') ? PORT_BTN_DOWN : PORT_BTN_POGO;
         }
@@ -121,7 +123,8 @@ static uint8_t autoButtons(void) {
         if (t < 25000 && t % 1500 >= 700 && t % 1500 < 850) b |= PORT_BTN_DOWN;
         if (t % 1500 < 300) b |= PORT_BTN_JUMP;
     }
-    // "D"/"X" (text box checks): hold Down / button 2 for 1.4 s from KEEN_AUTO_AT ms
+    // "B" (with M and D): button 1 at KEEN_AUTO_AT + 2.4 s, to close the status screen.
+// "D"/"X" (text box checks): hold Down / button 2 for 1.4 s from KEEN_AUTO_AT ms
     // (a long press opens the status screen / the in-game menu).
     uint32_t t0 = keenAutoAt();
     if (t >= t0 && t < t0 + 1400) {

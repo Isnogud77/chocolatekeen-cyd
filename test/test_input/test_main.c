@@ -10,7 +10,14 @@
 
 static uint8_t g_testButtons;
 static uint32_t g_testNow;
-uint8_t port_read_buttons(void) { return g_testButtons; }
+static int s_pollCount = -1; // >= 0: scripted, b1 from the 5th poll on; fail instead of hanging
+uint8_t port_read_buttons(void) {
+    if (s_pollCount >= 0) {
+        if (++s_pollCount > 5000) TEST_FAIL_MESSAGE("translate_key(0) never returned");
+        return s_pollCount >= 5 ? PORT_BTN_JUMP : 0;
+    }
+    return g_testButtons;
+}
 uint32_t port_millis(void) { return g_testNow; }
 
 void setUp(void) {
@@ -207,8 +214,41 @@ static void test_not_char_waiting_in_play_maps_ctrl_alt(void) {
     TEST_ASSERT_EQUAL_HEX(0, g_input.key_scane);
 }
 
+// The status screen waits in CVort_translate_key(0): in play that wait must answer to button 1 (Enter).
+static void test_key_wait_in_play_b1_event_is_enter(void) {
+    play_context_set(true, true);
+    CVort_test_setKeyWaitActive(true);
+    input_apply_buttons_at(PORT_BTN_JUMP, 0);
+    TEST_ASSERT_EQUAL_HEX(0x1C | 0x80, g_input.key_scane);
+    TEST_ASSERT_EQUAL(0, g_input.key_map[0x1D]);
+    CVort_test_setKeyWaitActive(false);
+}
+static void test_key_wait_inactive_b1_is_ctrl(void) {
+    play_context_set(true, true);
+    CVort_test_setKeyWaitActive(false);
+    input_apply_buttons_at(PORT_BTN_JUMP, 0);
+    TEST_ASSERT_EQUAL(1, g_input.key_map[0x1D]);
+    TEST_ASSERT_EQUAL_HEX(0, g_input.key_scane);
+}
+static uint8_t s_transMap[128];
+static void test_real_translate_key_zero_returns_on_b1(void) {
+    play_context_set(true, true);
+    memset(s_transMap, 0, sizeof s_transMap);
+    s_transMap[0x1C] = 0x0D;
+    exeFields.trans_map = s_transMap;
+    g_input.key_scane = 0;
+    s_pollCount = 0;
+    uint16_t r = CVort_translate_key(0);
+    s_pollCount = -1;
+    TEST_ASSERT_EQUAL_HEX(0x0D, r & 0xFF);
+    TEST_ASSERT_FALSE(CVort_test_keyWaitActive());
+}
+
 int main(void) {
     UNITY_BEGIN();
+    RUN_TEST(test_key_wait_in_play_b1_event_is_enter);
+    RUN_TEST(test_key_wait_inactive_b1_is_ctrl);
+    RUN_TEST(test_real_translate_key_zero_returns_on_b1);
     RUN_TEST(test_char_wait_in_play_b1_event_is_enter);
     RUN_TEST(test_not_char_waiting_in_play_maps_ctrl_alt);
     RUN_TEST(test_picker_overrides_menu_mapping);

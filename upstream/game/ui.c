@@ -64,6 +64,7 @@ static bool CVort_private_write_ctrls(FILE *fp) {
 }
 
 static bool g_isWaitingForCharInput = false;
+static bool g_isInKeyWait = false; // ESP32-PORT: CVort_translate_key(0) is blocking for a key
 
 void CVort_draw_keyname(int16_t key) {
     key &= 0x7F;
@@ -337,12 +338,16 @@ uint16_t CVort_translate_key(uint16_t type) {
             return (g_input.key_code | (returnHigh << 8));
         return 0;
     }
+    // ESP32-PORT: the buttons must answer this wait (menu mapping: b1 = Enter, b2 = Esc); save/restore for nesting.
+    bool prevKeyWait = g_isInKeyWait;
+    g_isInKeyWait = true;
     do {
         if (g_input.key_scane & 0x80) // Should be ((int8_t)g_input.key_scane < 0) or so?
         {
             g_input.key_scane &= 0x7f;
             if (exeFields.trans_map[g_input.key_scane]) {
                 g_input.key_code = exeFields.trans_map[g_input.key_scane];
+                g_isInKeyWait = prevKeyWait;
                 return (g_input.key_code | (g_input.key_scane << 8));
             }
         }
@@ -461,13 +466,17 @@ uint16_t CVort_read_char_with_echo() {
 }
 
 bool CVort_isWaitingForCharInput(void) {
-    return g_isWaitingForCharInput;
+    return g_isWaitingForCharInput || g_isInKeyWait; // ESP32-PORT: also true while translate_key(0) blocks
 }
 
 // ESP32-PORT: test seam, the flag is static here and only set inside read_char_with_echo
 void CVort_test_setWaitingForCharInput(bool waiting) {
     g_isWaitingForCharInput = waiting;
 }
+
+// ESP32-PORT: test seams for the translate_key(0) wait
+void CVort_test_setKeyWaitActive(bool waiting) { g_isInKeyWait = waiting; }
+bool CVort_test_keyWaitActive(void) { return g_isInKeyWait; }
 
 void CVort_draw_string(const char *str) {
     while (*str) {
