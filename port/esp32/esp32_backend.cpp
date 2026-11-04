@@ -121,6 +121,11 @@ void port_init(void) {
     fpsSince = millis();
 }
 
+// Store: real implementation follows (NVS namespace "keen").
+int port_store_load(const char *name, uint8_t *buf, int max) { (void)name; (void)buf; (void)max; return -1; }
+bool port_store_save(const char *name, const uint8_t *buf, int len) { (void)name; (void)buf; (void)len; return false; }
+void port_store_erase(const char *name) { (void)name; }
+
 bool port_audio_available(void) { return speakerRunning; }
 void port_audio_lock(void) { portENTER_CRITICAL(&audioMux); }
 void port_audio_unlock(void) { portEXIT_CRITICAL(&audioMux); }

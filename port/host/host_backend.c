@@ -60,6 +60,11 @@ void port_init(void) {
     if (!window || !renderer || !texture) port_fatal(SDL_GetError());
 }
 
+// Store: real implementation follows (files in ~/.keen-esp32/).
+int port_store_load(const char *name, uint8_t *buf, int max) { (void)name; (void)buf; (void)max; return -1; }
+bool port_store_save(const char *name, const uint8_t *buf, int len) { (void)name; (void)buf; (void)len; return false; }
+void port_store_erase(const char *name) { (void)name; }
+
 bool port_audio_available(void) { return audioDev != 0; }
 void port_audio_lock(void) { if (audioDev) SDL_LockAudioDevice(audioDev); }
 void port_audio_unlock(void) { if (audioDev) SDL_UnlockAudioDevice(audioDev); }

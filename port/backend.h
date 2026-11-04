@@ -38,6 +38,12 @@ void port_audio_unlock(void);
 // True if the backend's audio tick source runs (otherwise sounds never end).
 bool port_audio_available(void);
 
+// Small persistent key-value store (ESP32: NVS, host: files). Names are the
+// upstream file names, at most 15 characters.
+int port_store_load(const char *name, uint8_t *buf, int max); // bytes read, -1 if missing
+bool port_store_save(const char *name, const uint8_t *buf, int len);
+void port_store_erase(const char *name);
+
 #ifdef __cplusplus
 }
 #endif
