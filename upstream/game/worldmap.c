@@ -236,6 +236,9 @@ static void CVort_draw_worldmap_body(void) {
                 if (keen_gp.stuff[0] && keen_gp.stuff[4]
                     && keen_gp.stuff[1] && keen_gp.stuff[2]) {
                     CVort_ptr_draw_win();
+#ifdef ESP32_PORT
+                    port_autosave_erase(); // ESP32-PORT: a won game is over, nothing to continue
+#endif
                     CVort_game_over();
                     return;
                 }
@@ -246,12 +249,18 @@ static void CVort_draw_worldmap_body(void) {
                 }
                 if (totalTargets == 8) {
                     CVort_ptr_draw_win();
+#ifdef ESP32_PORT
+                    port_autosave_erase(); // ESP32-PORT: a won game is over, nothing to continue
+#endif
                     CVort_game_over();
                     return;
                 }
             } else {
                 if ((g_game.wmap_sprite_on & 0xFF) == 16) {
                     CVort_ptr_draw_win();
+#ifdef ESP32_PORT
+                    port_autosave_erase(); // ESP32-PORT: a won game is over, nothing to continue
+#endif
                     CVort_game_over();
                     return;
                 }
@@ -269,6 +278,9 @@ earthExplodes:
     {
         CVort_fade_in();
     }
+#ifdef ESP32_PORT
+    port_autosave_erase(); // ESP32-PORT: all lives lost; quitting to the title keeps the save
+#endif
     CVort_game_over();
 }
 
@@ -338,9 +350,6 @@ void CVort_draw_string_finale(const char *str) {
 
 void CVort_game_over() {
     play_context_set(false, false); // ESP32-PORT: score screen and name entry are menus, also when quitting from the map
-#ifdef ESP32_PORT
-    port_autosave_erase(); // ESP32-PORT: a lost game cannot be continued
-#endif
     char ranknames[][7] = {"first", "second", "third", "fourth", "fifth", "sixth", "last"};
     char score_file[14], scorestr[10], citystr[10];
     int16_t oldX, oldY;

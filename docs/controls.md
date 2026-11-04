@@ -70,7 +70,8 @@ cabinet, `pio run -e host` / `host_portrait` runs the game on a Mac or PC (SDL2)
   slot and no save dialog.
 - **Continue Game** in the main menu loads it and puts Keen back on the map.
   Without a save, Continue does nothing.
-- **Game over** deletes the save, so a lost game cannot be continued.
+- **Game over** (all lives lost) and **winning** delete the save. Quitting to
+  the title keeps it, so Continue resumes where you left off.
 - **High scores** (names entered with the letter picker) are kept across power
   cycles.
 - Storage: the ESP32's internal NVS flash (namespace `keen`), no SD card

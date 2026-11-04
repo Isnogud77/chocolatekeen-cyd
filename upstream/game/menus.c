@@ -509,7 +509,7 @@ select1:
 
     CVort_clear_keys();
     CVort_engine_delay(8);
-#ifdef ESP32_PORT // ESP32-PORT: rows 0 New Game, 1 Continue (autosave), , 2 Story, 3 Help, 4 High Scores
+#ifdef ESP32_PORT // ESP32-PORT: rows 0 New Game, 1 Continue (autosave), 2 Story, 3 Help, 4 High Scores
     switch (sel) {
         case 0:
             bg = 1;
