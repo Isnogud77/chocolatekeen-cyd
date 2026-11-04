@@ -73,11 +73,24 @@ static void test_game_over_erases(void) {
     TEST_ASSERT_EQUAL(-1, slotLen());
 }
 
+// High scores go through upstream's own writer/reader and the store.
+static void test_scores_survive_reboot(void) {
+    CVort_load_high_scores_table(); // first boot: upstream writes its defaults
+    high_scores_table.scores[0] = 54321;
+    strcpy(high_scores_table.names[0], "KEENY");
+    CVort_save_high_scores_table();
+    memset(&high_scores_table, 0, sizeof high_scores_table); // "reboot": RAM state gone
+    CVort_load_high_scores_table();
+    TEST_ASSERT_EQUAL_INT32(54321, high_scores_table.scores[0]);
+    TEST_ASSERT_EQUAL_STRING("KEENY", high_scores_table.names[0]);
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_autosave_roundtrip);
     RUN_TEST(test_continue_without_save_is_noop);
     RUN_TEST(test_corrupt_save_erased);
     RUN_TEST(test_game_over_erases);
+    RUN_TEST(test_scores_survive_reboot);
     return UNITY_END();
 }
