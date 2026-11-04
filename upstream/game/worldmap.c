@@ -10,6 +10,7 @@
 #include "core/globals.h"
 #include "input/actions.h"
 #include "letter_picker.h" // ESP32-PORT: high score letter picker
+#include "play_context.h" // ESP32-PORT: play context markers
 #include "episodes/episode1.h"
 #include "episodes/episode2.h"
 #include "episodes/episode3.h"
@@ -17,7 +18,15 @@
 
 #include "episodes/episode_macros.h"
 
+static void CVort_draw_worldmap_body(void);
+
+// ESP32-PORT: wrapper clears the play context on every return path of the map loop
 void CVort_draw_worldmap(void) {
+    CVort_draw_worldmap_body();
+    play_context_set(false, false);
+}
+
+static void CVort_draw_worldmap_body(void) {
     int16_t count_i, var4;
     int16_t level_return_code = 0; // draw_level return code; 0 == Died.
     uint16_t x_coord, y_coord;
@@ -137,6 +146,7 @@ void CVort_draw_worldmap(void) {
         CVort_clear_keys();
         CVort_engine_clearOverlay();
         g_game.on_world_map = 1;
+        play_context_set(true, false); // ESP32-PORT: Keen walks the map (restored after each level)
 
         do // Actual map loop
         {
@@ -165,6 +175,7 @@ void CVort_draw_worldmap(void) {
         } while (!g_game.wmap_sprite_on);
 
         g_game.on_world_map = 0;
+        play_context_set(false, false); // ESP32-PORT: leaving the map; the level sets its own context
         /* The original code takes g_game.wmap_sprite_on, a 16-bit value,
         shifts by 1 bit to the left and then uses this to access
         element number g_game.wmap_sprite_on in the array.

@@ -26,7 +26,7 @@ int screen_layout_screen_w(void);
 int screen_layout_screen_h(void);
 
 // Decision for the frame being presented (see spec "Mode decision").
-ScreenLayout_T screen_layout_frame(bool textDrawn, bool fullRedraw, int keenX);
+ScreenLayout_T screen_layout_frame(bool textDrawn, bool fullRedraw, bool inPlay, int keenX);
 
 // Writes output row y (l->outW pixels) from the 320x200 game window src.
 void screen_layout_row(const ScreenLayout_T *l, const uint8_t *src, int stride, int y,

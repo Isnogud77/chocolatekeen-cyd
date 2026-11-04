@@ -13,10 +13,10 @@ bool screen_layout_portrait(void) { return portrait; }
 int screen_layout_screen_w(void) { return portrait ? 240 : 320; }
 int screen_layout_screen_h(void) { return portrait ? 320 : 240; }
 
-ScreenLayout_T screen_layout_frame(bool textDrawn, bool fullRedraw, int keenX) {
+ScreenLayout_T screen_layout_frame(bool textDrawn, bool fullRedraw, bool inPlay, int keenX) {
     if (!portrait)
         return (ScreenLayout_T){LAYOUT_LANDSCAPE, 320, 240, 320, 200, 20, 0};
-    if (textDrawn)
+    if (textDrawn || !inPlay)
         lastMode = LAYOUT_SCALE;
     else if (fullRedraw)
         lastMode = LAYOUT_CROP;

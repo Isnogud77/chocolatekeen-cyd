@@ -13,6 +13,7 @@
 #ifdef ESP32_PORT // ESP32-PORT: render_image_mode_off
 #include "render.h"
 #endif
+#include "play_context.h" // ESP32-PORT: play context markers
 #include "input/actions.h"
 #include "platform/platform.h"
 #include "episodes/episode1.h"
@@ -865,7 +866,17 @@ static void level_handle_death(uint16_t levelnum) {
     }
 }
 
+static uint16_t CVort_draw_level_body(uint16_t levelnum);
+
+// ESP32-PORT: wrapper marks the play context for every return path of the level loop
 uint16_t CVort_draw_level(uint16_t levelnum) {
+    play_context_set(true, true);
+    uint16_t r = CVort_draw_level_body(levelnum);
+    play_context_set(false, false);
+    return r;
+}
+
+static uint16_t CVort_draw_level_body(uint16_t levelnum) {
     int16_t about_to_encounter_mortimer;
 
     level_init();

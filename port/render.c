@@ -12,6 +12,7 @@
 #include "backend.h"
 #include "render.h"
 #include "screen_layout.h"
+#include "play_context.h"
 
 uint8_t *pf;
 
@@ -199,7 +200,7 @@ void render_mark_full_redraw(void) { fullRedraw = true; }
 
 void render_present(void) {
     int keenX = (int)(g_entities.sprites[0].pos_x >> 8) - (int)(scroll_x >> 8);
-    ScreenLayout_T layout = screen_layout_frame(textDrawn, fullRedraw, keenX);
+    ScreenLayout_T layout = screen_layout_frame(textDrawn, fullRedraw, play_context_in_play(), keenX);
     textDrawn = fullRedraw = false;
     port_present(&layout, pf + fineY * PF_W + fineX, PF_W, pal565);
 }

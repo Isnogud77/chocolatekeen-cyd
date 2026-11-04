@@ -4,6 +4,7 @@
 #include "core/globals.h"
 #include "render.h"
 #include "screen_layout.h"
+#include "play_context.h"
 
 /* --- capture port_present; other fakes come from test_support/ --- */
 static const uint8_t *presentSrc;
@@ -138,9 +139,19 @@ static void test_present_after_char_scales(void) {
 static void test_present_after_redraw_crops(void) {
     screen_layout_set_portrait(true);
     render_present();
+    play_context_set(true, true);
     render_mark_full_redraw();
     render_present();
+    play_context_set(false, false);
     TEST_ASSERT_EQUAL_INT(LAYOUT_CROP, presentLayout.mode);
+}
+
+static void test_present_redraw_outside_play_scales(void) {
+    screen_layout_set_portrait(true);
+    play_context_set(false, false);
+    render_mark_full_redraw();
+    render_present();
+    TEST_ASSERT_EQUAL_INT(LAYOUT_SCALE, presentLayout.mode);
 }
 
 static void test_flags_cleared_after_present(void) {
@@ -150,8 +161,10 @@ static void test_flags_cleared_after_present(void) {
     render_present();
     render_present(); // idle: nothing drawn -> keeps SCALE
     TEST_ASSERT_EQUAL_INT(LAYOUT_SCALE, presentLayout.mode);
+    play_context_set(true, true);
     render_mark_full_redraw(); // text flag must not be sticky
     render_present();
+    play_context_set(false, false);
     TEST_ASSERT_EQUAL_INT(LAYOUT_CROP, presentLayout.mode);
 }
 
@@ -171,6 +184,7 @@ int main(void) {
     RUN_TEST(test_palette_applies);
     RUN_TEST(test_present_after_char_scales);
     RUN_TEST(test_present_after_redraw_crops);
+    RUN_TEST(test_present_redraw_outside_play_scales);
     RUN_TEST(test_flags_cleared_after_present);
     return UNITY_END();
 }
