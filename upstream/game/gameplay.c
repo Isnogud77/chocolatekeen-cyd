@@ -10,6 +10,9 @@
 #include <inttypes.h>
 
 #include "core/globals.h"
+#ifdef ESP32_PORT // ESP32-PORT: render_image_mode_off
+#include "render.h"
+#endif
 #include "input/actions.h"
 #include "platform/platform.h"
 #include "episodes/episode1.h"
@@ -432,6 +435,9 @@ void CVort_add_score(int16_t points) {
 
 void CVort_load_level_data(uint16_t levelnum) {
     g_game.current_level = levelnum;
+#ifdef ESP32_PORT // ESP32-PORT: leaving an image screen; resume the per-frame tile redraw
+    render_image_mode_off();
+#endif
     char filename[16];
     snprintf(filename, sizeof(filename), "%s%02" PRIu16 ".%s", "LEVEL", levelnum, game_ext);
     FILE *fp = CVort_engine_cross_ro_data_fopen(filename);

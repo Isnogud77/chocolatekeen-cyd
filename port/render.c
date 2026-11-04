@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "core/globals.h"
+#include "decompression/imageRLE.h"
 #include "engine/engine_timing.h"
 #include "keen1_assets.h"
 #include "backend.h"
@@ -19,6 +20,7 @@ static uint16_t pal565[16];
 static int fineX, fineY;
 // Layout inputs since the last present (see screen_layout.h).
 static bool textDrawn, fullRedraw;
+static bool imageMode;
 
 // Standard 16-color EGA RGB values (index = IRGB-ish EGA entry, 6 = brown).
 const uint32_t engine_egaRGBColorTable[16] = {
@@ -173,6 +175,16 @@ static void redrawAllTiles(uint16_t initTileIndex)
 	}
 }
 
+static void redrawPlayfield(void)
+{
+	if (imageMode) return;
+	redrawAllTiles((((map_width_bytes * ((scroll_y & 16777215) >> 12)) & 65535) >> 1) + ((scroll_x & 16777215) >> 12));
+}
+
+bool render_image_mode(void) { return imageMode; }
+void render_image_mode_off(void) { imageMode = false; }
+void render_redraw_for_test(void) { redrawPlayfield(); }
+
 // Window into the playfield, from upstream's EGA start address + panning.
 void CVort_private_engine_setEgaMemStartLocAndPanning(uint32_t egaStart, uint16_t panning)
 {
@@ -219,7 +231,7 @@ void CVort_engine_doDrawing()
 	CVort_engine_egaPageFlip();
 	render_mark_full_redraw();
 	anim_plane_i = (((CVort_private_engine_getTicks() & 65535) >> g_game.anim_speed) & 6) >> 1;
-	redrawAllTiles((((map_width_bytes * ((scroll_y & 16777215) >> 12)) & 65535) >> 1) + ((scroll_x & 16777215) >> 12));
+	redrawPlayfield();
 	uint32_t origDstPage = engine_dstPage;
 	engine_dstPage = engine_currPageStart;
 	uint16_t loopVar, drawCounter;
@@ -431,6 +443,56 @@ void CVort_engine_egaPageFlip()
 void CVort_engine_copyToTxtMemory(uint8_t *buffer) { (void)buffer; }
 void CVort_engine_decompGraphics() {} // assets are pre-converted in flash
 void CVort_engine_gotoXY(uint8_t x, uint8_t y) { (void)x; (void)y; }
-void CVort_engine_scrollText(int16_t top_line_offs, int16_t bot_line_offs, int16_t direction) { (void)top_line_offs; (void)bot_line_offs; (void)direction; }
 bool CVort_engine_setVideoMode(int16_t vidMode) { (void)vidMode; return true; }
-void CVort_engine_showImageFile(const char *filename) { textDrawn = true; port_log("showImageFile(%s) not supported", filename); }
+/* Same row ranges as upstream gfx.c: text rows are 8 pixel rows; direction 0
+   moves rows up on screen (row r gets r+8), direction 1 moves them down. */
+void CVort_engine_scrollText(int16_t top_line_offs, int16_t bot_line_offs, int16_t direction)
+{
+	int x0, y0;
+	offsetToPf(engine_dstPage, &x0, &y0);
+	int nRows = (bot_line_offs - top_line_offs) * 8;
+	if (direction == 0) {
+		int dst = y0 + top_line_offs * 8;
+		for (int r = 0; r < nRows; r++)
+			if (inPf(0, dst + r) && inPf(0, dst + r + 8))
+				memmove(pf + (dst + r) * PF_W, pf + (dst + r + 8) * PF_W, PF_W);
+	} else if (direction == 1) {
+		int dst = y0 + (top_line_offs + 1) * 8;
+		for (int r = nRows - 1; r >= 0; r--)
+			if (inPf(0, dst + r) && inPf(0, dst + r - 8))
+				memmove(pf + (dst + r) * PF_W, pf + (dst + r - 8) * PF_W, PF_W);
+	}
+	engine_isFrameReadyToDisplay = true;
+}
+
+void CVort_engine_showImageFile(const char *filename)
+{
+	textDrawn = true;
+	const AssetFile_T *f = port_find_asset(filename);
+	if (!f) { // Missing image file leaves scroll origin reset and returns.
+		scroll_x = scroll_y = 0;
+		return;
+	}
+	// Decode straight from flash into map_data (upstream staged the packed
+	// file at map_data + 0x4000, which does not fit the shrunk buffer).
+	do_image_file_decomp((uint8_t *)f->data, (uint8_t *)map_data);
+
+	scroll_x = scroll_y = 0;
+	imageMode = true;
+	CVort_engine_syncDrawing();
+	CVort_engine_drawScreen();
+
+	// Planar -> chunky. Image column 0 sits at EGA byte offset 32 of the page.
+	int px, py;
+	offsetToPf(engine_dstPage + 32, &px, &py);
+	const uint8_t *src = (const uint8_t *)map_data;
+	for (int y = 0; y < ENGINE_EGA_GFX_HEIGHT; y++)
+		for (int x = 0; x < ENGINE_EGA_GFX_WIDTH; x++) {
+			unsigned bit = (unsigned)y * ENGINE_EGA_GFX_WIDTH + x, off = bit / 8, sh = (bit % 8) ^ 7;
+			uint8_t v = (uint8_t)(((src[off] >> sh) & 1) | (((src[off + 0x2000] >> sh) & 1) << 1) |
+			                      (((src[off + 0x4000] >> sh) & 1) << 2) | (((src[off + 0x6000] >> sh) & 1) << 3));
+			if (inPf(px + x, py + y)) pf[(py + y) * PF_W + px + x] = v;
+		}
+	CVort_engine_clearOverlay();
+	engine_isFrameReadyToDisplay = true;
+}
