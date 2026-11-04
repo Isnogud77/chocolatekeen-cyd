@@ -18,6 +18,8 @@ enum {
     PORT_BTN_DOWN = 1 << 3,
     PORT_BTN_JUMP = 1 << 4,
     PORT_BTN_POGO = 1 << 5,
+    PORT_BTN_START = 1 << 6,  // MCP GPB0
+    PORT_BTN_MENU = 1 << 7,   // MCP GPB1
 };
 
 void port_init(void);                 // display, input, timer
