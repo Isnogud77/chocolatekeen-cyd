@@ -53,6 +53,17 @@ static void test_exe_unpacked(void) {
     TEST_ASSERT_TRUE(keen1_exeImageSize > 0x16200);
 }
 
+static void test_text_files_present(void) {
+    static const struct { const char *name; uint32_t size; } t[] = {
+        {"FINALE.CK1", 8565}, {"HELPTEXT.CK1", 1859}, {"STORYTXT.CK1", 3411}, {"ENDTEXT.CK1", 902},
+        {"PREVIEWS.CK1", 2112}, {"SCORES.CK1", 204}, {"CTLPANEL.CK1", 44}};
+    for (unsigned i = 0; i < sizeof t / sizeof t[0]; i++) {
+        const AssetFile_T *f = port_find_asset(t[i].name);
+        TEST_ASSERT_NOT_NULL_MESSAGE(f, t[i].name);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(t[i].size, f->size, t[i].name);
+    }
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_header_counts);
@@ -60,6 +71,7 @@ int main(void) {
     RUN_TEST(test_sprite_pixels_in_range);
     RUN_TEST(test_level01_present);
     RUN_TEST(test_sounds_present);
+    RUN_TEST(test_text_files_present);
     RUN_TEST(test_level_fits_map_data);
     RUN_TEST(test_exe_unpacked);
     return UNITY_END();

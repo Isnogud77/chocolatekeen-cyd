@@ -37,6 +37,9 @@ static void checkLevel(int num, const char *file) {
     const AssetFile_T *f = find(file);
     TEST_ASSERT_NOT_NULL(f);
     uint32_t words = decodeOracle(f);
+    // Upstream CRLE_expandSwapped decodes the 2nd (zero) header word as data, so it stops one word
+    // short; the final word (bottom-right sprite-plane cell, unused by the game) is never produced.
+    if (words) words--;
     memset(map_data, 0x55, sizeof(map_data));
     CVort_load_level_data(num);
     for (uint32_t i = 0; i < words; i++)
@@ -51,9 +54,19 @@ static void test_level01_loads(void) { checkLevel(1, "LEVEL01.CK1"); }
 // 25632 bytes unpacked: past the first 20478 bytes the old memmove moved.
 static void test_level14_loads(void) { checkLevel(14, "LEVEL14.CK1"); }
 
+static void test_all_levels_load(void) {
+    static const int nums[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 80, 81, 90};
+    for (unsigned i = 0; i < sizeof nums / sizeof nums[0]; i++) {
+        char name[16];
+        snprintf(name, sizeof name, "LEVEL%02d.CK1", nums[i]);
+        checkLevel(nums[i], name);
+    }
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_level01_loads);
     RUN_TEST(test_level14_loads);
+    RUN_TEST(test_all_levels_load);
     return UNITY_END();
 }
