@@ -8,6 +8,9 @@
 #endif
 #include <inttypes.h>
 #include "core/globals.h"
+#ifdef ESP32_PORT // ESP32-PORT
+#include "backend.h"
+#endif
 #include "input/actions.h"
 #include "core/io_helpers.h"
 #include "core/path_helpers.h"
@@ -533,6 +536,10 @@ select1:
 }
 
 void CVort_draw_menu() {
+#ifdef ESP32_PORT // ESP32-PORT: log free heap once, the first time the main menu is drawn
+    static bool heapReported = false;
+    if (!heapReported) { heapReported = true; port_report_heap("menu"); }
+#endif
 #ifdef ESP32_PORT // ESP32-PORT: arcade menu: 5 items (upstream has no disabled-text style, so Continue is plain)
     CVort_draw_box_opening_main(0x12, 0x7);
     cursorX_b = cursorX;

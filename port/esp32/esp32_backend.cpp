@@ -132,7 +132,7 @@ uint8_t port_read_buttons(void) {
     if (mcp_reinit_due(mcpLastInit, millis())) mcpInit();
     Wire.beginTransmission(kMcpAddr);
     Wire.write(0x12); // GPIOA
-    bool ok = Wire.endTransmission(false) == 0 && Wire.requestFrom(kMcpAddr, (uint8_t)1) == 1;
+    bool ok = Wire.endTransmission(false) == 0 && Wire.requestFrom(kMcpAddr, (uint8_t)2) == 2; // GPIOA + GPIOB (sequential addressing)
     if (!ok) {
         if (!i2cFailing) port_log("controller: I2C read failed, treating as no input");
         i2cFailing = true;
@@ -140,8 +140,9 @@ uint8_t port_read_buttons(void) {
     }
     if (i2cFailing) port_log("controller: I2C back");
     i2cFailing = false;
-    uint8_t raw = Wire.read();
-    return (uint8_t)(~raw & 0x3F); // active low; GPA0..5 = PORT_BTN_*
+    uint8_t gpioa = Wire.read();
+    uint8_t gpiob = Wire.read();
+    return mcp_buttons_from_gpio(gpioa, gpiob);
 }
 
 void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]) {

@@ -18,6 +18,8 @@
 - Hochformat (Galagino-Gehäuse): Envs `host_portrait` / `cyd_portrait` (`-DKEEN_PORTRAIT=1`); Spielbild 240x200 folgt Keen, Text-Frames 3:4 skaliert
 - Gerät: `pio run -e cyd -t upload` (Hochformat: `-e cyd_portrait`), Serial 115200. Port wechselt je nach USB-Buchse (gesehen: /dev/cu.usbserial-120, -2140): dann `--upload-port <port>` angeben
 
+- Steuerung, Pinbelegung (inkl. Start/Menu GPB0/GPB1) und Erweiterung: docs/controls.md
+
 ## Messwerte Level 1 (2026-11-03, Sound 2026-11-04)
 - fps 24.3 stabil, 10 min ohne Reset
 - Heap nach Boot: 49 180 B frei (mit Sound), größter Block 29 684 B

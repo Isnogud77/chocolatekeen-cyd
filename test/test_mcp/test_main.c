@@ -1,6 +1,7 @@
 // MCP23017 setup sequence: every register the input path depends on.
 #include <unity.h>
 #include "mcp23017.h"
+#include "backend.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -39,6 +40,22 @@ static void test_reinit_due_every_second(void) {
     TEST_ASSERT_TRUE(mcp_reinit_due(0xFFFFFF00u, 0x00000300u)); // millis wrap
 }
 
+// Buttons are active low; GPA0..5 = game buttons, GPB0 = Start, GPB1 = Menu.
+static void test_buttons_none(void) { TEST_ASSERT_EQUAL_HEX8(0, mcp_buttons_from_gpio(0xFF, 0xFF)); }
+static void test_buttons_gpa(void) {
+    TEST_ASSERT_EQUAL_HEX8(PORT_BTN_LEFT, mcp_buttons_from_gpio(0xFE, 0xFF));
+    TEST_ASSERT_EQUAL_HEX8(PORT_BTN_POGO, mcp_buttons_from_gpio(0xDF, 0xFF));
+    TEST_ASSERT_EQUAL_HEX8(PORT_BTN_JUMP | PORT_BTN_POGO, mcp_buttons_from_gpio(0xCF, 0xFF));
+}
+static void test_buttons_gpb(void) {
+    TEST_ASSERT_EQUAL_HEX8(PORT_BTN_START, mcp_buttons_from_gpio(0xFF, 0xFE));
+    TEST_ASSERT_EQUAL_HEX8(PORT_BTN_MENU, mcp_buttons_from_gpio(0xFF, 0xFD));
+    TEST_ASSERT_EQUAL_HEX8(PORT_BTN_START | PORT_BTN_MENU, mcp_buttons_from_gpio(0xFF, 0xFC));
+}
+static void test_buttons_ignore_unused_pins(void) {
+    TEST_ASSERT_EQUAL_HEX8(0, mcp_buttons_from_gpio(0x3F, 0x03)); // GPA6/7 and GPB2..7 low: not buttons
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_polarity_reset);
@@ -47,5 +64,9 @@ int main(void) {
     RUN_TEST(test_interrupts_off);
     RUN_TEST(test_bank_reset_first);
     RUN_TEST(test_reinit_due_every_second);
+    RUN_TEST(test_buttons_none);
+    RUN_TEST(test_buttons_gpa);
+    RUN_TEST(test_buttons_gpb);
+    RUN_TEST(test_buttons_ignore_unused_pins);
     return UNITY_END();
 }

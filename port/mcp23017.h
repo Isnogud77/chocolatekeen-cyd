@@ -22,6 +22,9 @@ extern const int mcp_init_count;
 
 #define MCP_REINIT_MS 1000u
 
+// GPIOA/GPIOB (active low) -> PORT_BTN_* mask: GPA0..5 = bits 0..5, GPB0 = Start (6), GPB1 = Menu (7).
+uint8_t mcp_buttons_from_gpio(uint8_t gpioa, uint8_t gpiob);
+
 bool mcp_reinit_due(uint32_t lastInitMs, uint32_t nowMs);
 
 #ifdef __cplusplus

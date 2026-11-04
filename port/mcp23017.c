@@ -17,3 +17,7 @@ const int mcp_init_count = sizeof mcp_init_seq / sizeof mcp_init_seq[0];
 bool mcp_reinit_due(uint32_t lastInitMs, uint32_t nowMs) {
     return (uint32_t)(nowMs - lastInitMs) >= MCP_REINIT_MS;
 }
+
+uint8_t mcp_buttons_from_gpio(uint8_t gpioa, uint8_t gpiob) {
+    return (uint8_t)((~gpioa & 0x3F) | ((~gpiob & 0x03) << 6));
+}
