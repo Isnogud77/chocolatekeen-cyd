@@ -55,9 +55,11 @@ FILE *CVort_engine_cross_ro_data_fopen(const char *filename) {
     return port_fopen_asset(filename);
 }
 
+FILE *port_save_fopen(const char *name, const char *mode); // ESP32-PORT: port/save_store.c
+
+// ESP32-PORT: saves and scores live in a small key-value store (port/save_store.c)
 FILE *CVort_engine_cross_rw_misc_fopen(const char *filename, const char *mode) {
-    (void)filename; (void)mode;
-    return NULL;
+    return port_save_fopen(filename, mode);
 }
 
 FILE *CVort_engine_configpath_fopen(const char *filename, const char *mode) {

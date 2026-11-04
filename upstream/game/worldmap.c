@@ -18,6 +18,11 @@
 
 #include "episodes/episode_macros.h"
 
+#ifdef ESP32_PORT // ESP32-PORT: autosave helpers live in menus.c
+bool port_autosave(void);
+void port_autosave_erase(void);
+#endif
+
 static void CVort_draw_worldmap_body(void);
 
 // ESP32-PORT: wrapper clears the play context on every return path of the map loop
@@ -147,6 +152,10 @@ static void CVort_draw_worldmap_body(void) {
         CVort_engine_clearOverlay();
         g_game.on_world_map = 1;
         play_context_set(true, false); // ESP32-PORT: Keen walks the map (restored after each level)
+#ifdef ESP32_PORT // ESP32-PORT: arcade autosave every time Keen is (back) on the map with lives left
+        if (keen_gp.lives > -1)
+            port_autosave();
+#endif
 
         do // Actual map loop
         {
@@ -227,6 +236,9 @@ static void CVort_draw_worldmap_body(void) {
                 if (keen_gp.stuff[0] && keen_gp.stuff[4]
                     && keen_gp.stuff[1] && keen_gp.stuff[2]) {
                     CVort_ptr_draw_win();
+#ifdef ESP32_PORT
+                    port_autosave_erase(); // ESP32-PORT: a won game is over, nothing to continue
+#endif
                     CVort_game_over();
                     return;
                 }
@@ -237,12 +249,18 @@ static void CVort_draw_worldmap_body(void) {
                 }
                 if (totalTargets == 8) {
                     CVort_ptr_draw_win();
+#ifdef ESP32_PORT
+                    port_autosave_erase(); // ESP32-PORT: a won game is over, nothing to continue
+#endif
                     CVort_game_over();
                     return;
                 }
             } else {
                 if ((g_game.wmap_sprite_on & 0xFF) == 16) {
                     CVort_ptr_draw_win();
+#ifdef ESP32_PORT
+                    port_autosave_erase(); // ESP32-PORT: a won game is over, nothing to continue
+#endif
                     CVort_game_over();
                     return;
                 }
@@ -260,6 +278,9 @@ earthExplodes:
     {
         CVort_fade_in();
     }
+#ifdef ESP32_PORT
+    port_autosave_erase(); // ESP32-PORT: all lives lost; quitting to the title keeps the save
+#endif
     CVort_game_over();
 }
 

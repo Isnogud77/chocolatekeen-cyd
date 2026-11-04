@@ -63,6 +63,21 @@ pio run -e cyd_portrait -t upload      # or -e cyd
 Serial monitor is 115200 baud (fps and free heap are logged). Without a
 cabinet, `pio run -e host` / `host_portrait` runs the game on a Mac or PC (SDL2).
 
+## Saving
+
+- The game **autosaves** every time Keen is (back) on the world map with
+  lives left — after finishing a level and after dying. There is one save
+  slot and no save dialog.
+- **Continue Game** in the main menu loads it and puts Keen back on the map.
+  Without a save, Continue does nothing.
+- **Game over** (all lives lost) and **winning** delete the save. Quitting to
+  the title keeps it, so Continue resumes where you left off.
+- **High scores** (names entered with the letter picker) are kept across power
+  cycles.
+- Storage: the ESP32's internal NVS flash (namespace `keen`), no SD card
+  needed. To wipe saves and scores, erase the flash and flash again:
+  `pio run -e cyd -t erase` (or `cyd_portrait`), then upload.
+
 ## Hot-plug
 
 A hot-plugged controller cable can scribble into the MCP23017 registers

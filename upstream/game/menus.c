@@ -56,6 +56,56 @@ static bool CVort_private_write_saved_game_payload(FILE *fp) {
     return saveOk;
 }
 
+#ifdef ESP32_PORT // ESP32-PORT: arcade autosave in slot 1 (no save dialog on the cabinet)
+uint16_t port_continue_autosave(void);
+#define PORT_AUTOSAVE_SLOT '1'
+void port_store_erase(const char *name);
+
+static void port_autosave_path(char *path, size_t size) {
+    CK_Path_FormatSavedSlot(path, size, PORT_AUTOSAVE_SLOT, game_ext);
+}
+
+bool port_autosave(void) {
+    char path[13];
+    port_autosave_path(path, sizeof(path));
+    FILE *fp = CVort_engine_cross_rw_misc_fopen(path, "wb");
+    if (!fp)
+        return false;
+    bool ok = CVort_private_write_saved_game_payload(fp);
+    ok = (fclose(fp) == 0) && ok;
+    return ok;
+}
+
+// Like CVort_private_continue_game for slot 1, without prompts. A save of the
+// wrong size is treated as missing and erased.
+uint16_t port_continue_autosave(void) {
+    char path[13];
+    port_autosave_path(path, sizeof(path));
+    FILE *fp = CVort_engine_cross_rw_misc_fopen(path, "rb");
+    if (!fp)
+        return 0;
+    if (CVort_filelength(fp) != 92) {
+        fclose(fp);
+        port_store_erase(path);
+        return 0;
+    }
+    bool loadOk = CVort_private_read_saved_game_payload(fp);
+    fclose(fp);
+    if (!loadOk) {
+        port_store_erase(path);
+        return 0;
+    }
+    g_game.resuming_saved_game = 1;
+    return 1;
+}
+
+void port_autosave_erase(void) {
+    char path[13];
+    port_autosave_path(path, sizeof(path));
+    port_store_erase(path);
+}
+#endif
+
 static bool CVort_private_read_high_scores_table(FILE *fp) {
     bool loadOk = true;
     int entryCounter, partCounter;
@@ -459,13 +509,16 @@ select1:
 
     CVort_clear_keys();
     CVort_engine_delay(8);
-#ifdef ESP32_PORT // ESP32-PORT: rows 0 New Game, 1 Continue (no saves yet: ignored, cursor stays), 2 Story, 3 Help, 4 High Scores
+#ifdef ESP32_PORT // ESP32-PORT: rows 0 New Game, 1 Continue (autosave), 2 Story, 3 Help, 4 High Scores
     switch (sel) {
         case 0:
             bg = 1;
             break;
-        case 1:
-            goto loc_192C0;
+        case 1: // ESP32-PORT: Continue loads the autosave; without one the cursor stays
+            if (!port_continue_autosave())
+                goto loc_192C0;
+            bg = 1;
+            break;
         case 2:
             bg = 0;
             CVort_do_story();
