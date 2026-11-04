@@ -79,11 +79,31 @@ static void pumpEvents(void) {
 // (logo, title, New Game, ...), then the R/J autoplay; until 25 s down is
 // also tapped (150 ms every 1.5 s), which walks Keen from his map start to
 // level 1 (down-right of it).
+// "S"/"H"/"C" (front-end scripts): one button 1 press at 3 s skips the logo and
+// opens the menu; Down is tapped 2/3/4 times (from 5 s, every 0.8 s) to reach
+// Story/Help/High Scores; button 1 selects (8 s); Story and Help are paged down
+// three times (10, 11.5, 13 s); button 2 (15 s) goes back.
+static uint8_t frontEndScript(char which, uint32_t t) {
+    int downs = which == 'S' ? 2 : which == 'H' ? 3 : 4;
+    if (t >= 3000 && t < 3300) return PORT_BTN_JUMP;
+    for (int i = 0; i < downs; i++)
+        if (t >= 5000 + 800u * i && t < 5150 + 800u * i) return PORT_BTN_DOWN;
+    if (t >= 8000 && t < 8300) return PORT_BTN_JUMP;
+    if (which != 'C')
+        for (int i = 0; i < 3; i++)
+            if (t >= 10000 + 1500u * i && t < 10150 + 1500u * i) return PORT_BTN_DOWN;
+    if (t >= 15000 && t < 15300) return PORT_BTN_POGO;
+    return 0;
+}
+
 static uint8_t autoButtons(void) {
     const char *a = getenv("KEEN_AUTO");
     if (!a) return 0;
     uint32_t t = SDL_GetTicks();
     uint8_t b = 0;
+    if (strchr(a, 'S')) return frontEndScript('S', t);
+    if (strchr(a, 'H')) return frontEndScript('H', t);
+    if (strchr(a, 'C')) return frontEndScript('C', t);
     if (strchr(a, 'M')) {
         if (t < 3000) return 0;
         if (t < 13000) return (t - 3000) % 2000 < 300 ? PORT_BTN_JUMP : 0;
@@ -124,6 +144,7 @@ static void dumpFrame(void) {
         fwrite(rgb, 3, 1, f);
     }
     fclose(f);
+    if (getenv("KEEN_DUMP_LOG")) fprintf(stderr, "dump %d at %u ms\n", count / every, (unsigned)SDL_GetTicks());
 }
 
 // KEEN_TEXT_PROBE (debug aid): from the 60th frame on, draw "PORTRAIT" with the
