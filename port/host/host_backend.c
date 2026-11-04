@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "backend.h"
 #include "pcspeaker.h"
 
@@ -47,6 +48,8 @@ static void openAudio(void) {
     SDL_PauseAudioDevice(audioDev, 0);
 }
 
+static void storeSelftest(void);
+
 void port_init(void) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) port_fatal(SDL_GetError());
     openAudio();
@@ -58,12 +61,56 @@ void port_init(void) {
     SDL_RenderSetLogicalSize(renderer, scrW, scrH);
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, scrW, scrH);
     if (!window || !renderer || !texture) port_fatal(SDL_GetError());
+    storeSelftest();
 }
 
-// Store: real implementation follows (files in ~/.keen-esp32/).
-int port_store_load(const char *name, uint8_t *buf, int max) { (void)name; (void)buf; (void)max; return -1; }
-bool port_store_save(const char *name, const uint8_t *buf, int len) { (void)name; (void)buf; (void)len; return false; }
-void port_store_erase(const char *name) { (void)name; }
+// Store: files in ~/.keen-esp32/ (written to <name>.tmp, then renamed).
+static void storePath(const char *name, const char *suffix, char *out, size_t size) {
+    const char *home = getenv("HOME");
+    snprintf(out, size, "%s/.keen-esp32/%s%s", home ? home : ".", name, suffix);
+}
+
+int port_store_load(const char *name, uint8_t *buf, int max) {
+    char path[512];
+    storePath(name, "", path, sizeof path);
+    FILE *f = fopen(path, "rb");
+    if (!f) return -1;
+    int n = (int)fread(buf, 1, (size_t)max, f);
+    fclose(f);
+    return n;
+}
+
+bool port_store_save(const char *name, const uint8_t *buf, int len) {
+    char dir[512], tmp[512], path[512];
+    const char *home = getenv("HOME");
+    snprintf(dir, sizeof dir, "%s/.keen-esp32", home ? home : ".");
+    mkdir(dir, 0755);
+    storePath(name, ".tmp", tmp, sizeof tmp);
+    storePath(name, "", path, sizeof path);
+    FILE *f = fopen(tmp, "wb");
+    if (!f) return false;
+    bool ok = fwrite(buf, 1, (size_t)len, f) == (size_t)len;
+    ok = (fclose(f) == 0) && ok;
+    return ok && rename(tmp, path) == 0;
+}
+
+void port_store_erase(const char *name) {
+    char path[512];
+    storePath(name, "", path, sizeof path);
+    remove(path);
+}
+
+// KEEN_STORE_SELFTEST=1 (debug aid): save, load, erase a test blob at boot.
+static void storeSelftest(void) {
+    if (!getenv("KEEN_STORE_SELFTEST")) return;
+    const uint8_t data[4] = {1, 2, 3, 4};
+    uint8_t got[8] = {0};
+    bool ok = port_store_save("SELFTEST.CK1", data, 4) && port_store_load("SELFTEST.CK1", got, 8) == 4 &&
+              !memcmp(got, data, 4);
+    port_store_erase("SELFTEST.CK1");
+    ok = ok && port_store_load("SELFTEST.CK1", got, 8) == -1;
+    port_log("store selftest %s", ok ? "ok" : "FAILED");
+}
 
 bool port_audio_available(void) { return audioDev != 0; }
 void port_audio_lock(void) { if (audioDev) SDL_LockAudioDevice(audioDev); }

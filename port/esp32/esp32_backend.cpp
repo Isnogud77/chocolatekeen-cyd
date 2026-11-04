@@ -5,6 +5,8 @@
 #include <Wire.h>
 #include <esp_heap_caps.h>
 #include <esp_timer.h>
+#include <nvs_flash.h>
+#include <nvs.h>
 #include <hal/dac_ll.h>
 #include <stdarg.h>
 #include "backend.h"
@@ -104,6 +106,12 @@ void startSpeaker() {
 extern "C" {
 
 void port_init(void) {
+    esp_err_t nvsErr = nvs_flash_init();
+    if (nvsErr == ESP_ERR_NVS_NO_FREE_PAGES || nvsErr == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        nvs_flash_erase(); // partition full or from another layout: start clean
+        nvsErr = nvs_flash_init();
+    }
+    if (nvsErr != ESP_OK) port_log("store: NVS init failed (%d), saving disabled", (int)nvsErr);
     tft.init();
     tft.setRotation(screen_layout_portrait() ? 0 : 1); // 0 = upright in the Galagino cabinet
     tft.fillScreen(TFT_BLACK);
@@ -121,10 +129,30 @@ void port_init(void) {
     fpsSince = millis();
 }
 
-// Store: real implementation follows (NVS namespace "keen").
-int port_store_load(const char *name, uint8_t *buf, int max) { (void)name; (void)buf; (void)max; return -1; }
-bool port_store_save(const char *name, const uint8_t *buf, int len) { (void)name; (void)buf; (void)len; return false; }
-void port_store_erase(const char *name) { (void)name; }
+// Store: NVS namespace "keen", one blob per name; handle opened per call.
+int port_store_load(const char *name, uint8_t *buf, int max) {
+    nvs_handle_t h;
+    if (nvs_open("keen", NVS_READONLY, &h) != ESP_OK) return -1;
+    size_t len = (size_t)max;
+    esp_err_t err = nvs_get_blob(h, name, buf, &len);
+    nvs_close(h);
+    return err == ESP_OK ? (int)len : -1;
+}
+
+bool port_store_save(const char *name, const uint8_t *buf, int len) {
+    nvs_handle_t h;
+    if (nvs_open("keen", NVS_READWRITE, &h) != ESP_OK) return false;
+    bool ok = nvs_set_blob(h, name, buf, (size_t)len) == ESP_OK && nvs_commit(h) == ESP_OK;
+    nvs_close(h);
+    return ok;
+}
+
+void port_store_erase(const char *name) {
+    nvs_handle_t h;
+    if (nvs_open("keen", NVS_READWRITE, &h) != ESP_OK) return;
+    if (nvs_erase_key(h, name) == ESP_OK) nvs_commit(h);
+    nvs_close(h);
+}
 
 bool port_audio_available(void) { return speakerRunning; }
 void port_audio_lock(void) { portENTER_CRITICAL(&audioMux); }
