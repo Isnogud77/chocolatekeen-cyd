@@ -1162,6 +1162,7 @@ void CVort_process_text_file(uint8_t *buffer) {
     }
 }
 
+#include "text_fix.h" // ESP32-PORT: CR LF fix for text files
 void CVort_load_and_process_text_file(const char *filename, uint8_t ** pBuffer) {
     FILE *fp = CVort_engine_cross_ro_data_fopen(filename);
     if (!fp)
@@ -1178,6 +1179,15 @@ void CVort_load_and_process_text_file(const char *filename, uint8_t ** pBuffer) 
         CVort_chg_vid_and_error("Failed to read a text file!");
     }
     fclose(fp);
+
+    // ESP32-PORT: STORYTXT/ENDTEXT use bare LF; upstream expects CR LF (a stray LF is drawn as a glyph)
+    {
+        uint32_t newLen = len;
+        uint8_t *fixed = port_text_crlf(*pBuffer, len, &newLen);
+        if (!fixed)
+            CVort_chg_vid_and_error("Out of memory!");
+        *pBuffer = fixed;
+    }
 
     CVort_process_text_file(*pBuffer);
 }
