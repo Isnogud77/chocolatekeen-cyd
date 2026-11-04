@@ -158,6 +158,12 @@ static uint8_t autoButtons(void) {
     if (!a) return 0;
     uint32_t t = SDL_GetTicks();
     uint8_t b = 0;
+    // "K": open the menu, cursor down once, button 1 = Continue Game.
+    if (strchr(a, 'K')) {
+        if ((t >= 3000 && t < 3300) || (t >= 8000 && t < 8300)) return PORT_BTN_JUMP;
+        if (t >= 5000 && t < 5150) return PORT_BTN_DOWN;
+        return 0;
+    }
     if (strchr(a, 'S')) return frontEndScript('S', t);
     if (strchr(a, 'H')) return frontEndScript('H', t);
     if (strchr(a, 'C')) return frontEndScript('C', t);

@@ -18,6 +18,11 @@
 
 #include "episodes/episode_macros.h"
 
+#ifdef ESP32_PORT // ESP32-PORT: autosave helpers live in menus.c
+bool port_autosave(void);
+void port_autosave_erase(void);
+#endif
+
 static void CVort_draw_worldmap_body(void);
 
 // ESP32-PORT: wrapper clears the play context on every return path of the map loop
@@ -147,6 +152,10 @@ static void CVort_draw_worldmap_body(void) {
         CVort_engine_clearOverlay();
         g_game.on_world_map = 1;
         play_context_set(true, false); // ESP32-PORT: Keen walks the map (restored after each level)
+#ifdef ESP32_PORT // ESP32-PORT: arcade autosave every time Keen is (back) on the map with lives left
+        if (keen_gp.lives > -1)
+            port_autosave();
+#endif
 
         do // Actual map loop
         {
@@ -329,6 +338,9 @@ void CVort_draw_string_finale(const char *str) {
 
 void CVort_game_over() {
     play_context_set(false, false); // ESP32-PORT: score screen and name entry are menus, also when quitting from the map
+#ifdef ESP32_PORT
+    port_autosave_erase(); // ESP32-PORT: a lost game cannot be continued
+#endif
     char ranknames[][7] = {"first", "second", "third", "fourth", "fifth", "sixth", "last"};
     char score_file[14], scorestr[10], citystr[10];
     int16_t oldX, oldY;

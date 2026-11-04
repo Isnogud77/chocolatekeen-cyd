@@ -64,7 +64,7 @@ Backend interface:
 - `bool port_store_save(const char *name, const uint8_t *buf, int len)`
 - `void port_store_erase(const char *name)`
 
-Names are the upstream file names (e.g. `SAVEGAM1.CK1`, `SCORES.CK1`); NVS keys
+Names are the upstream file names (e.g. `SAVED1.CK1`, `SCORES.CK1`); NVS keys
 are limited to 15 characters, which these fit.
 
 ## Upstream patches (`// ESP32-PORT: <reason>`)

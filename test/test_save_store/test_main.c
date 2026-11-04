@@ -21,11 +21,11 @@ static int storeLen(const char *name) {
 }
 
 static void test_write_close_read_roundtrip(void) {
-    FILE *w = port_save_fopen("SAVEGAM1.CK1", "wb");
+    FILE *w = port_save_fopen("SAVED1.CK1", "wb");
     TEST_ASSERT_NOT_NULL(w);
     TEST_ASSERT_EQUAL(92, fwrite(pattern, 1, 92, w));
     TEST_ASSERT_EQUAL(0, fclose(w));
-    FILE *r = port_save_fopen("SAVEGAM1.CK1", "rb");
+    FILE *r = port_save_fopen("SAVED1.CK1", "rb");
     TEST_ASSERT_NOT_NULL(r);
     uint8_t got[100] = {0};
     TEST_ASSERT_EQUAL(92, fread(got, 1, sizeof got, r));
@@ -34,16 +34,16 @@ static void test_write_close_read_roundtrip(void) {
 }
 
 static void test_nothing_stored_before_close(void) {
-    FILE *w = port_save_fopen("SAVEGAM1.CK1", "wb");
+    FILE *w = port_save_fopen("SAVED1.CK1", "wb");
     fwrite(pattern, 1, 50, w);
     fflush(w);
-    TEST_ASSERT_EQUAL(-1, storeLen("SAVEGAM1.CK1"));
+    TEST_ASSERT_EQUAL(-1, storeLen("SAVED1.CK1"));
     fclose(w);
-    TEST_ASSERT_EQUAL(50, storeLen("SAVEGAM1.CK1"));
+    TEST_ASSERT_EQUAL(50, storeLen("SAVED1.CK1"));
 }
 
 static void test_missing_read_is_null(void) {
-    TEST_ASSERT_NULL(port_save_fopen("SAVEGAM1.CK1", "rb"));
+    TEST_ASSERT_NULL(port_save_fopen("SAVED1.CK1", "rb"));
 }
 
 static void test_unserved_names_null(void) {
@@ -78,10 +78,10 @@ static void test_overwrite_replaces(void) {
 
 // Upstream's continue checks CVort_filelength(fp) == 92 (fseek/ftell).
 static void test_reader_seek_and_tell(void) {
-    FILE *w = port_save_fopen("SAVEGAM1.CK1", "wb");
+    FILE *w = port_save_fopen("SAVED1.CK1", "wb");
     fwrite(pattern, 1, 92, w);
     fclose(w);
-    FILE *r = port_save_fopen("SAVEGAM1.CK1", "rb");
+    FILE *r = port_save_fopen("SAVED1.CK1", "rb");
     TEST_ASSERT_EQUAL(0, fseek(r, 0, SEEK_END));
     TEST_ASSERT_EQUAL(92, ftell(r));
     TEST_ASSERT_EQUAL(0, fseek(r, 0, SEEK_SET));

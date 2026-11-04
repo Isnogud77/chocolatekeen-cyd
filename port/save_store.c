@@ -11,7 +11,7 @@
 #include "save_store.h"
 
 static bool served(const char *name) {
-    return !strncasecmp(name, "SAVEGAM1.", 9) || !strncasecmp(name, "SCORES.", 7);
+    return !strncasecmp(name, "SAVED1.", 7) || !strncasecmp(name, "SCORES.", 7);
 }
 
 typedef struct {
