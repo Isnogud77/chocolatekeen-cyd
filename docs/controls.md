@@ -39,8 +39,8 @@ everything else (menus, text, prompts) is "menu".
 | Button 1 | Ctrl (jump) | Enter + Y + Space held; sends Enter as a key press (prompts accept it as yes) |
 | Button 2 | Alt (pogo) | Esc + N |
 | Both buttons | fire (Ctrl+Alt) | none |
-| Button 2 held 1 s | Esc pulse (in-game menu) | none |
-| Down held 1 s (level only) | status-screen key pulse | none |
+| Button 2 held 1 s | Esc pulse: "Quit to title (Y/N)?" (button 1 = yes, button 2 = no) | none |
+| Down held 1 s (level only) | Space pulse: status screen (any button closes it) | none |
 | Start (GPB0), Menu (GPB1) | Enter / Esc | Enter / Esc |
 
 A pulse is the key pressed for 100 ms, so the game sees exactly one press.
