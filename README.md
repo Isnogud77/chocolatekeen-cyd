@@ -44,6 +44,23 @@ The `cyd` test prints every pin change on the serial monitor and lights a box
 per pin on screen, so you can see that every joystick direction and button
 reaches the right GPA pin (see [docs/controls.md](docs/controls.md)).
 
+## Flash a prebuilt release (no PlatformIO needed)
+
+Download `chocolatekeen-cyd-portrait.bin` (upright cabinet) or
+`chocolatekeen-cyd-landscape.bin` from the
+[Releases](../../releases) page and write it to address `0x0`:
+
+```sh
+pip install esptool
+esptool --chip esp32 write-flash 0x0 chocolatekeen-cyd-portrait.bin
+```
+
+Or use Espressif's browser flasher, [ESP Tool](https://espressif.github.io/esptool-js/)
+(Chrome/Edge): connect, add the file at address `0x0`, program.
+
+Flashing a release file at `0x0` also wipes saves and high scores. Each
+release lists a SHA-256 checksum per file.
+
 ## Build and flash
 
 You need [PlatformIO](https://platformio.org/) (CLI or the VS Code extension).
