@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "screen_layout.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,8 +24,9 @@ void port_init(void);                 // display, input, timer
 uint32_t port_millis(void);
 void port_sleep_ms(uint32_t ms);
 uint8_t port_read_buttons(void);      // PORT_BTN_* mask, 1 = pressed
-// Show a 320x200 window of 8-bit EGA indices; stride in bytes per row.
-void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]);
+// Show the 320x200 game window src (8-bit EGA indices, stride bytes per row)
+// as the layout says (picture size, screen row, crop/scale).
+void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]);
 void port_log(const char *fmt, ...);
 void port_report_heap(const char *where);
 _Noreturn void port_fatal(const char *msg);

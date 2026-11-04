@@ -5,7 +5,7 @@
 #include "backend.h"
 #define WEAK __attribute__((weak))
 
-WEAK void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]) { (void)src; (void)stride; (void)pal565; }
+WEAK void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]) { (void)layout; (void)src; (void)stride; (void)pal565; }
 WEAK uint32_t port_millis(void) { return 0; }
 WEAK void port_sleep_ms(uint32_t ms) { (void)ms; }
 WEAK uint8_t port_read_buttons(void) { return 0; }

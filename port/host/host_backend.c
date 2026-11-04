@@ -109,10 +109,9 @@ static void dumpFrame(void) {
     fclose(f);
 }
 
-void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]) {
-    for (int y = 0; y < 200; y++)
-        for (int x = 0; x < 320; x++)
-            screen[(y + 20) * 320 + x] = pal565[src[y * stride + x] & 15];
+void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]) {
+    for (int y = 0; y < layout->outH; y++)
+        screen_layout_row(layout, src, stride, y, pal565, screen + (layout->top + y) * 320);
     dumpFrame();
     SDL_UpdateTexture(texture, NULL, screen, 320 * 2);
     SDL_RenderClear(renderer);

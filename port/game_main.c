@@ -6,6 +6,7 @@
 #include "backend.h"
 #include "input_map.h"
 #include "render.h"
+#include "screen_layout.h"
 
 // Upstream defines these without a header declaration.
 void CVort_engine_prepareEpisodeSpecificFuncPointers(void);
@@ -32,7 +33,12 @@ void port_level_loop(void) {
     }
 }
 
+#ifndef KEEN_PORTRAIT
+#define KEEN_PORTRAIT 0 // build envs *_portrait set 1
+#endif
+
 void port_game_run(void) {
+    screen_layout_set_portrait(KEEN_PORTRAIT); // before port_init: sets the screen size
     port_init();
     if (!render_init())
         port_fatal("Out of memory for playfield");

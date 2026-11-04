@@ -19,6 +19,7 @@ extern uint8_t *pf;   // heap, PF_W * PF_H
 bool render_init(void);                    // malloc pf, bind asset tables
 uint16_t ega_to_rgb565(uint8_t egaSignal); // 6-bit EGA signal -> RGB565
 void render_present(void);                 // visible window -> port_present
+void render_mark_full_redraw(void);        // doDrawing redrew the playfield (layout input)
 
 // Upstream gfx.c internal, kept with its name (also used by tests).
 void CVort_private_engine_setEgaMemStartLocAndPanning(uint32_t egaStart, uint16_t panning);

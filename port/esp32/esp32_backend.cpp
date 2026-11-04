@@ -17,7 +17,6 @@ constexpr int kSdaPin = 22, kSclPin = 27;
 constexpr uint8_t kMcpAddr = 0x20;
 constexpr int kStripLines = 20;                 // 10 strips per 200-line frame
 constexpr int kStripPixels = 320 * kStripLines; // 12 800 bytes per buffer
-constexpr int kTopOffset = 20;                  // center 200 lines on 240
 constexpr int kSpeakerPin = 26;        // DAC_CHAN_1
 // Volume: the DAC square wave swings 0 .. amplitude (full would be 255).
 // The CYD amplifier is very loud, so we keep it well below full.
@@ -145,15 +144,15 @@ uint8_t port_read_buttons(void) {
     return (uint8_t)(~raw & 0x3F); // active low; GPA0..5 = PORT_BTN_*
 }
 
-void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]) {
+void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]) {
     uint16_t pal[16];
     for (int i = 0; i < 16; i++) pal[i] = (uint16_t)((pal565[i] >> 8) | (pal565[i] << 8)); // SPI byte order
-    for (int strip = 0; strip < 200 / kStripLines; strip++) {
-        uint16_t *dst = strips[strip & 1]; // DMA sends one buffer while we fill the other
-        const uint8_t *row = src + strip * kStripLines * stride;
-        for (int y = 0; y < kStripLines; y++, row += stride)
-            for (int x = 0; x < 320; x++) *dst++ = pal[row[x] & 15];
-        tft.pushImageDMA(0, kTopOffset + strip * kStripLines, 320, kStripLines, strips[strip & 1]);
+    for (int y0 = 0, n = 0; y0 < layout->outH; y0 += kStripLines, n++) {
+        int lines = layout->outH - y0 < kStripLines ? layout->outH - y0 : kStripLines; // last strip may be short
+        uint16_t *dst = strips[n & 1]; // DMA sends one buffer while we fill the other
+        for (int y = 0; y < lines; y++)
+            screen_layout_row(layout, src, stride, y0 + y, pal, dst + y * layout->outW);
+        tft.pushImageDMA(0, layout->top + y0, layout->outW, lines, strips[n & 1]);
     }
     if (++fpsCount, millis() - fpsSince >= 5000) {
         port_log("fps %.1f", fpsCount * 1000.0f / (millis() - fpsSince));

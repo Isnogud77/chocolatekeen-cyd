@@ -10,12 +10,15 @@
 #include "keen1_assets.h"
 #include "backend.h"
 #include "render.h"
+#include "screen_layout.h"
 
 uint8_t *pf;
 
 static uint8_t *tilePtrs[611], *fontPtrs[256], *bmpPtrs[18], *spritePtrs[119];
 static uint16_t pal565[16];
 static int fineX, fineY;
+// Layout inputs since the last present (see screen_layout.h).
+static bool textDrawn, fullRedraw;
 
 // Standard 16-color EGA RGB values (index = IRGB-ish EGA entry, 6 = brown).
 const uint32_t engine_egaRGBColorTable[16] = {
@@ -76,6 +79,7 @@ static inline bool inPf(int x, int y) { return (unsigned)x < PF_W && (unsigned)y
 
 void CVort_engine_drawChar(uint16_t x, uint16_t y, uint16_t val)
 {
+	textDrawn = true;
 	int px, py;
 	offsetToPf(engine_dstPage + (x << 3) + y * ENGINE_EGA_GFX_SCANLINE_LEN, &px, &py);
 	const uint8_t *src = engine_egaFonts[val & 0xFF];
@@ -137,6 +141,7 @@ void CVort_engine_drawTile(uint16_t x, uint16_t y, uint16_t num)
 
 void CVort_engine_drawBitmap(uint16_t x, uint16_t y, uint16_t num)
 {
+	textDrawn = true;
 	if (num >= engine_egaHeadGeneral.bmpNum)
 		num = 0;
 	x <<= 3;
@@ -178,8 +183,13 @@ void CVort_private_engine_setEgaMemStartLocAndPanning(uint32_t egaStart, uint16_
 	fineY = y < 0 ? 0 : (y > PF_H - 200 ? PF_H - 200 : y);
 }
 
+void render_mark_full_redraw(void) { fullRedraw = true; }
+
 void render_present(void) {
-    port_present(pf + fineY * PF_W + fineX, PF_W, pal565);
+    int keenX = (int)(g_entities.sprites[0].pos_x >> 8) - (int)(scroll_x >> 8);
+    ScreenLayout_T layout = screen_layout_frame(textDrawn, fullRedraw, keenX);
+    textDrawn = fullRedraw = false;
+    port_present(&layout, pf + fineY * PF_W + fineX, PF_W, pal565);
 }
 
 void CVort_engine_updateActualDisplay()
@@ -207,6 +217,7 @@ void CVort_engine_setPaletteAndBorderColor(const uint8_t *palette) {
 void CVort_engine_doDrawing()
 {
 	CVort_engine_egaPageFlip();
+	render_mark_full_redraw();
 	anim_plane_i = (((CVort_private_engine_getTicks() & 65535) >> g_game.anim_speed) & 6) >> 1;
 	redrawAllTiles((((map_width_bytes * ((scroll_y & 16777215) >> 12)) & 65535) >> 1) + ((scroll_x & 16777215) >> 12));
 	uint32_t origDstPage = engine_dstPage;
@@ -422,4 +433,4 @@ void CVort_engine_decompGraphics() {} // assets are pre-converted in flash
 void CVort_engine_gotoXY(uint8_t x, uint8_t y) { (void)x; (void)y; }
 void CVort_engine_scrollText(int16_t top_line_offs, int16_t bot_line_offs, int16_t direction) { (void)top_line_offs; (void)bot_line_offs; (void)direction; }
 bool CVort_engine_setVideoMode(int16_t vidMode) { (void)vidMode; return true; }
-void CVort_engine_showImageFile(const char *filename) { (void)filename; port_log("showImageFile(%s) not supported", filename); }
+void CVort_engine_showImageFile(const char *filename) { textDrawn = true; port_log("showImageFile(%s) not supported", filename); }

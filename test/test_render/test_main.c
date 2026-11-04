@@ -3,12 +3,15 @@
 #include <string.h>
 #include "core/globals.h"
 #include "render.h"
+#include "screen_layout.h"
 
 /* --- capture port_present; other fakes come from test_support/ --- */
 static const uint8_t *presentSrc;
 static int presentStride;
 static uint16_t presentPal[16];
-void port_present(const uint8_t *src, int stride, const uint16_t pal565[16]) {
+static ScreenLayout_T presentLayout;
+void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]) {
+    presentLayout = *layout;
     presentSrc = src;
     presentStride = stride;
     memcpy(presentPal, pal565, sizeof presentPal);
@@ -55,6 +58,7 @@ void setUp(void) {
     anim_plane_i = 0;
 
     engine_dstPage = 0;
+    screen_layout_set_portrait(false);
 }
 void tearDown(void) {}
 
@@ -123,6 +127,34 @@ static void test_palette_applies(void) {
     TEST_ASSERT_EQUAL_HEX16(0xA800, presentPal[4]);
 }
 
+static void test_present_after_char_scales(void) {
+    screen_layout_set_portrait(true);
+    render_present(); // consume anything earlier tests left
+    CVort_engine_drawChar(0, 0, 'A');
+    render_present();
+    TEST_ASSERT_EQUAL_INT(LAYOUT_SCALE, presentLayout.mode);
+}
+
+static void test_present_after_redraw_crops(void) {
+    screen_layout_set_portrait(true);
+    render_present();
+    render_mark_full_redraw();
+    render_present();
+    TEST_ASSERT_EQUAL_INT(LAYOUT_CROP, presentLayout.mode);
+}
+
+static void test_flags_cleared_after_present(void) {
+    screen_layout_set_portrait(true);
+    render_present();
+    CVort_engine_drawChar(0, 0, 'A');
+    render_present();
+    render_present(); // idle: nothing drawn -> keeps SCALE
+    TEST_ASSERT_EQUAL_INT(LAYOUT_SCALE, presentLayout.mode);
+    render_mark_full_redraw(); // text flag must not be sticky
+    render_present();
+    TEST_ASSERT_EQUAL_INT(LAYOUT_CROP, presentLayout.mode);
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_rgb565_white);
@@ -137,5 +169,8 @@ int main(void) {
     RUN_TEST(test_sprite_mask_keeps_background);
     RUN_TEST(test_present_window_max_fine);
     RUN_TEST(test_palette_applies);
+    RUN_TEST(test_present_after_char_scales);
+    RUN_TEST(test_present_after_redraw_crops);
+    RUN_TEST(test_flags_cleared_after_present);
     return UNITY_END();
 }
