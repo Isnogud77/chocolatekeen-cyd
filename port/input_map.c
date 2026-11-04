@@ -74,7 +74,8 @@ void input_apply_buttons_at(uint8_t mask, uint32_t nowMs) {
     if (level && (mask & PORT_BTN_DOWN) && pulse_active(3, nowMs)) g_input.key_map[SC_SPACE] = 1;
 
     // Press events: one per press edge, never while the key stays held.
-    if (pressed & PORT_BTN_JUMP) { if (!play) key_event(SC_Y); }
+    // ESP32-PORT: Enter, not Y: "Press ENTER" prompts loop until 0x0D; quit prompts accept Enter as yes.
+    if (pressed & PORT_BTN_JUMP) { if (!play) key_event(SC_ENTER); }
     if (pressed & PORT_BTN_POGO) { if (!play) key_event(SC_ESC); }
     if (pressed & PORT_BTN_START) key_event(SC_ENTER);
     if (pressed & PORT_BTN_MENU) key_event(SC_ESC);

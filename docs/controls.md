@@ -36,7 +36,7 @@ everything else (menus, text, prompts) is "menu".
 | | Play | Menus, text, prompts |
 |---|---|---|
 | Joystick | arrows | arrows (select, page) |
-| Button 1 | Ctrl (jump) | Enter + Y + Space |
+| Button 1 | Ctrl (jump) | Enter + Y + Space held; sends Enter as a key press (prompts accept it as yes) |
 | Button 2 | Alt (pogo) | Esc + N |
 | Both buttons | fire (Ctrl+Alt) | none |
 | Button 2 held 1 s | Esc pulse (in-game menu) | none |

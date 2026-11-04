@@ -494,8 +494,11 @@ void CVort_handle_quit() {
 #endif
         CVort_draw_box_opening_main(0xC, 1);
         CVort_draw_string("Quit (Y/N)?");
-        if (CVort_engine_toupper(CVort_read_char_with_echo()) != 'Y')
-            return;
+        { // ESP32-PORT: unreachable here, but keep Enter (button 1) as yes for consistency
+            uint16_t quitCh = CVort_engine_toupper(CVort_read_char_with_echo());
+            if (quitCh != 'Y' && quitCh != 0x0D)
+                return;
+        }
         CVort_chg_vid_and_error("");
         return; // Actually, that never happens...
     }
@@ -506,6 +509,7 @@ void CVort_handle_quit() {
     switch (CVort_engine_toupper(CVort_read_char_with_echo())) {
         case 'T':
         case 'Y':
+        case 0x0D: // ESP32-PORT: button 1 sends Enter in prompts
             g_game.quit_to_title = 1;
             break;
         default:

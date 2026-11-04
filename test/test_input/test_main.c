@@ -102,13 +102,13 @@ static void test_menu_b1_holds_enter_y_space(void) {
     TEST_ASSERT_EQUAL(1, g_input.key_map[0x15]);
     TEST_ASSERT_EQUAL(1, g_input.key_map[0x39]);
 }
-static void test_menu_b1_event_is_y(void) {
+static void test_menu_b1_event_is_enter(void) {
     play_context_set(false, false);
     input_apply_buttons_at(PORT_BTN_JUMP, 0);
-    TEST_ASSERT_EQUAL_HEX(0x15 | 0x80, g_input.key_scane);
+    TEST_ASSERT_EQUAL_HEX(0x1C | 0x80, g_input.key_scane);
     g_input.key_scane &= 0x7F;
     input_apply_buttons_at(PORT_BTN_JUMP, 10);
-    TEST_ASSERT_EQUAL_HEX(0x15, g_input.key_scane);
+    TEST_ASSERT_EQUAL_HEX(0x1C, g_input.key_scane);
 }
 static void test_menu_b2_event_is_esc(void) {
     play_context_set(false, false);
@@ -184,12 +184,12 @@ static void test_update_down_hold_status_action(void) {
     TEST_ASSERT_TRUE(CK_Action_IsHeld(CK_ACTION_STATUS));
 }
 
-// A character prompt in play (quit, sound...) answers with menu keys: b1 = Y, b2 = Esc.
-static void test_char_wait_in_play_maps_menu_keys(void) {
+// A character prompt in play (quit, sound...) answers with menu keys: b1 = Enter, b2 = Esc.
+static void test_char_wait_in_play_b1_event_is_enter(void) {
     play_context_set(true, true);
     CVort_test_setWaitingForCharInput(true);
     input_apply_buttons_at(PORT_BTN_JUMP, 0);
-    TEST_ASSERT_EQUAL_HEX(0x15 | 0x80, g_input.key_scane);
+    TEST_ASSERT_EQUAL_HEX(0x1C | 0x80, g_input.key_scane);
     TEST_ASSERT_EQUAL(0, g_input.key_map[0x1D]);
     input_apply_buttons_at(0, 10);
     g_input.key_scane = 0;
@@ -209,7 +209,7 @@ static void test_not_char_waiting_in_play_maps_ctrl_alt(void) {
 
 int main(void) {
     UNITY_BEGIN();
-    RUN_TEST(test_char_wait_in_play_maps_menu_keys);
+    RUN_TEST(test_char_wait_in_play_b1_event_is_enter);
     RUN_TEST(test_not_char_waiting_in_play_maps_ctrl_alt);
     RUN_TEST(test_picker_overrides_menu_mapping);
     RUN_TEST(test_picker_waits_for_consume);
@@ -219,7 +219,7 @@ int main(void) {
     RUN_TEST(test_keyboard_state_reads_mapping);
     RUN_TEST(test_play_b1_is_ctrl);
     RUN_TEST(test_menu_b1_holds_enter_y_space);
-    RUN_TEST(test_menu_b1_event_is_y);
+    RUN_TEST(test_menu_b1_event_is_enter);
     RUN_TEST(test_menu_b2_event_is_esc);
     RUN_TEST(test_long_press_b2_pulses_esc);
     RUN_TEST(test_down_hold_in_level_pulses_space);
