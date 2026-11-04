@@ -254,6 +254,16 @@ void CVort_do_intro_and_menu() {
                 introTickCounter -= g_game.sprite_sync;
                 if (introTickCounter <= 0) {
                     CVort_fade_out();
+#ifdef ESP32_PORT // ESP32-PORT: idle cycle is title <-> high scores only (About ID, Ordering Info are not on the cabinet)
+                    if (introCurrScreen == 0) {
+                        scroll_x = 0x54000;
+                        scroll_y = 0x2000;
+                        CVort_do_scores();
+                        introCurrScreen = 1; // ++ below: 2 = scores shown, as upstream
+                    } else
+                        introCurrScreen = 3; // ++ below: 4 = back to the title
+                    doHalt = false;
+#else
                     switch (introCurrScreen) {
                         case 0:
                             scroll_x = 0x3F000;
@@ -281,6 +291,7 @@ void CVort_do_intro_and_menu() {
                             break;
                         default: break;
                     }
+#endif
                     if (!doHalt) {
                         //introTickCounter = 0xC0;
                         introTickCounter = 2400;
@@ -300,7 +311,7 @@ void CVort_do_intro_and_menu() {
             if (CVort_has_any_ack_press(&currInput) || g_game.intro_complete)
                 break;
         }
-            g_game.intro_complete = 0;
+        g_game.intro_complete = 0;
         if ((scroll_x >> 16) || ((scroll_x & 0xFFFF) != 0x2000))
             CVort_fade_out();
         //if (CVort_draw_title(introTickCounter))

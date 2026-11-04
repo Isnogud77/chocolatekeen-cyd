@@ -499,6 +499,20 @@ void CVort_handle_quit() {
         CVort_chg_vid_and_error("");
         return; // Actually, that never happens...
     }
+#ifdef ESP32_PORT // ESP32-PORT: no DOS; the only quit is to the title (button 1 = Y), anything else cancels
+    CVort_draw_box_opening_main(0x14, 2);
+    CVort_draw_string("Quit to title\n");
+    CVort_draw_string("(Y/N)?");
+    switch (CVort_engine_toupper(CVort_read_char_with_echo())) {
+        case 'T':
+        case 'Y':
+            g_game.quit_to_title = 1;
+            break;
+        default:
+            break;
+    }
+    return;
+#endif
     CVort_draw_box_opening_main(0x14, 2);
     CVort_draw_string("Quit to (D)os or\n");
     CVort_draw_string("(T)itle:");
@@ -506,7 +520,7 @@ void CVort_handle_quit() {
     {
         case 'D':
         case 'N': // Vita alias: Square defaults to 'N'
-            CVort_chg_vid_and_error(""); // ESP32-PORT: lands in the title (see CVort_chg_vid_and_error)
+            CVort_chg_vid_and_error("");
             break;
         case 'T':
         case 'Y': // Vita alias: Cross defaults to 'Y'

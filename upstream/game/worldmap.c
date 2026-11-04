@@ -328,6 +328,7 @@ void CVort_draw_string_finale(const char *str) {
 }
 
 void CVort_game_over() {
+    play_context_set(false, false); // ESP32-PORT: score screen and name entry are menus, also when quitting from the map
     char ranknames[][7] = {"first", "second", "third", "fourth", "fifth", "sixth", "last"};
     char score_file[14], scorestr[10], citystr[10];
     int16_t oldX, oldY;

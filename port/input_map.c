@@ -52,7 +52,8 @@ void input_apply_buttons_at(uint8_t mask, uint32_t nowMs) {
         s_prev = mask;
         return;
     }
-    bool play = play_context_in_play();
+    // A character prompt (quit, sound, god mode...) answers with menu keys even in play.
+    bool play = play_context_in_play() && !CVort_isWaitingForCharInput();
     bool level = play_context_in_level();
     bool b1 = (mask & PORT_BTN_JUMP) != 0, b2 = (mask & PORT_BTN_POGO) != 0;
     bool start = (mask & PORT_BTN_START) != 0, menu = (mask & PORT_BTN_MENU) != 0;
