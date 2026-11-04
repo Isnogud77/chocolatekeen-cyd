@@ -11,7 +11,8 @@
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
-static uint16_t screen[320 * 240];
+static uint16_t screen[320 * 320]; // big enough for either orientation
+static int scrW, scrH;               // from screen_layout at port_init
 static SDL_AudioDeviceID audioDev; // 0 until audio is opened
 
 // SDL audio thread: advance the PC speaker every 6868 us of samples and
@@ -49,10 +50,13 @@ static void openAudio(void) {
 void port_init(void) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) port_fatal(SDL_GetError());
     openAudio();
-    window = SDL_CreateWindow("keen-esp32 (host)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 960, 720, 0);
+    scrW = screen_layout_screen_w();
+    scrH = screen_layout_screen_h();
+    int zoom = scrH > scrW ? 2 : 3; // portrait at 3x would not fit most displays
+    window = SDL_CreateWindow("keen-esp32 (host)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, zoom * scrW, zoom * scrH, 0);
     renderer = SDL_CreateRenderer(window, -1, 0);
-    SDL_RenderSetLogicalSize(renderer, 320, 240);
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 320, 240);
+    SDL_RenderSetLogicalSize(renderer, scrW, scrH);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, scrW, scrH);
     if (!window || !renderer || !texture) port_fatal(SDL_GetError());
 }
 
@@ -100,8 +104,8 @@ static void dumpFrame(void) {
     snprintf(name, sizeof name, path, count / 30);
     FILE *f = fopen(name, "wb");
     if (!f) return;
-    fprintf(f, "P6\n320 240\n255\n");
-    for (int i = 0; i < 320 * 240; i++) {
+    fprintf(f, "P6\n%d %d\n255\n", scrW, scrH);
+    for (int i = 0; i < scrW * scrH; i++) {
         uint16_t c = screen[i];
         uint8_t rgb[3] = {(uint8_t)((c >> 11) << 3), (uint8_t)(((c >> 5) & 63) << 2), (uint8_t)((c & 31) << 3)};
         fwrite(rgb, 3, 1, f);
@@ -109,11 +113,27 @@ static void dumpFrame(void) {
     fclose(f);
 }
 
+// KEEN_TEXT_PROBE (debug aid): from the 60th frame on, draw "PORTRAIT" with the
+// game font every frame, so the text (SCALE) layout can be checked.
+void CVort_engine_drawChar(uint16_t x, uint16_t y, uint16_t val);
+static void textProbe(void) {
+    static int frames;
+    if (!getenv("KEEN_TEXT_PROBE") || ++frames < 60) return;
+    const char *s = "PORTRAIT";
+    for (int i = 0; s[i]; i++) CVort_engine_drawChar((uint16_t)(5 + i), 40, (uint16_t)s[i]);
+}
+
 void port_present(const ScreenLayout_T *layout, const uint8_t *src, int stride, const uint16_t pal565[16]) {
+    static int lastMode = -1;
+    if ((int)layout->mode != lastMode) { // bars differ per mode: clear once
+        memset(screen, 0, sizeof screen);
+        lastMode = layout->mode;
+    }
     for (int y = 0; y < layout->outH; y++)
-        screen_layout_row(layout, src, stride, y, pal565, screen + (layout->top + y) * 320);
+        screen_layout_row(layout, src, stride, y, pal565, screen + (layout->top + y) * scrW);
+    textProbe();
     dumpFrame();
-    SDL_UpdateTexture(texture, NULL, screen, 320 * 2);
+    SDL_UpdateTexture(texture, NULL, screen, scrW * 2);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);

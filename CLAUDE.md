@@ -14,7 +14,8 @@
 - Assets neu erzeugen: `make -C tools/assetdump run`
 - Tests (Mac): `pio test -e test`
 - Mac-Version ("fake CYD", SDL2): `pio run -e host && .pio/build/host/program` (Pfeile, Z = Springen, X = Pogo, Esc = Ende)
-  - Debug-Hilfen: `KEEN_AUTO=RJ` (Knöpfe per Skript), `KEEN_DUMP=frame%02d.ppm` (Bilder speichern)
+  - Debug-Hilfen: `KEEN_AUTO=RJ` (Knöpfe per Skript), `KEEN_DUMP=frame%02d.ppm` (Bilder speichern), `KEEN_TEXT_PROBE=1` (erzwingt Text-Frames → skaliertes Hochformat)
+- Hochformat (Galagino-Gehäuse): Envs `host_portrait` / `cyd_portrait` (`-DKEEN_PORTRAIT=1`); Spielbild 240x200 folgt Keen, Text-Frames 3:4 skaliert
 - Gerät: `pio run -e cyd -t upload`, Serial 115200 auf /dev/cu.usbserial-120
 
 ## Messwerte Level 1 (2026-11-03, Sound 2026-11-04)
