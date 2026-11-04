@@ -2,6 +2,7 @@
 // which upstream already turns into "fire".
 #include "core/globals.h"
 #include "backend.h"
+#include "input/actions.h"
 #include "input_map.h"
 #include "play_context.h"
 
@@ -71,4 +72,9 @@ void input_apply_buttons_at(uint8_t mask, uint32_t nowMs) {
 
 void input_apply_buttons(uint8_t mask) { input_apply_buttons_at(mask, 0); }
 
-void CVort_engine_updateInputStatus() { input_apply_buttons_at(port_read_buttons(), port_millis()); }
+// ESP32-PORT: upstream's input.c is not vendored; its action state must be refreshed around the key map.
+void CVort_engine_updateInputStatus() {
+    CK_ActionState_BeginFrame();
+    input_apply_buttons_at(port_read_buttons(), port_millis());
+    CK_ActionState_UpdateFromLegacyInput();
+}

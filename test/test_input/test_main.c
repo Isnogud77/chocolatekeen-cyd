@@ -5,8 +5,16 @@
 #include "backend.h"
 #include "input_map.h"
 #include "play_context.h"
+#include "input/actions.h"
+
+static uint8_t g_testButtons;
+static uint32_t g_testNow;
+uint8_t port_read_buttons(void) { return g_testButtons; }
+uint32_t port_millis(void) { return g_testNow; }
 
 void setUp(void) {
+    g_testButtons = 0;
+    g_testNow = 0;
     memset(g_input.key_map, 0, sizeof g_input.key_map);
     g_input.key_scane = 0;
     input_reset_state();
@@ -124,6 +132,25 @@ static void test_start_menu_buttons(void) {
     }
 }
 
+static void test_update_drives_action_state(void) {
+    play_context_set(false, false);
+    g_testButtons = PORT_BTN_POGO;
+    CVort_engine_updateInputStatus();
+    TEST_ASSERT_TRUE(CK_Action_IsHeld(CK_ACTION_MENU_BACK));
+    g_testButtons = 0;
+    g_testNow = 10;
+    CVort_engine_updateInputStatus();
+    TEST_ASSERT_FALSE(CK_Action_IsHeld(CK_ACTION_MENU_BACK));
+}
+static void test_update_down_hold_status_action(void) {
+    g_testButtons = PORT_BTN_DOWN;
+    CVort_engine_updateInputStatus();
+    TEST_ASSERT_FALSE(CK_Action_IsHeld(CK_ACTION_STATUS));
+    g_testNow = 1000;
+    CVort_engine_updateInputStatus();
+    TEST_ASSERT_TRUE(CK_Action_IsHeld(CK_ACTION_STATUS));
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_diagonal_left_up);
@@ -138,5 +165,7 @@ int main(void) {
     RUN_TEST(test_down_hold_in_level_pulses_space);
     RUN_TEST(test_down_hold_on_map_no_status);
     RUN_TEST(test_start_menu_buttons);
+    RUN_TEST(test_update_drives_action_state);
+    RUN_TEST(test_update_down_hold_status_action);
     return UNITY_END();
 }
