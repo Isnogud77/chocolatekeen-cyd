@@ -1,5 +1,5 @@
-// Text files (STORYTXT, HELPTEXT, ENDTEXT) after upstream's loader: upstream
-// expects CR LF line ends. A stray LF is drawn as a glyph (a blue ball).
+// Guard: shipped text files (STORYTXT, HELPTEXT, ENDTEXT) keep CR LF line ends
+// (git once LF-normalized them; a stray LF is drawn as a glyph, a blue ball).
 #include <unity.h>
 #include <stdlib.h>
 #include <string.h>

@@ -55,8 +55,8 @@ static void test_exe_unpacked(void) {
 
 static void test_text_files_present(void) {
     static const struct { const char *name; uint32_t size; } t[] = {
-        {"FINALE.CK1", 8565}, {"HELPTEXT.CK1", 1859}, {"STORYTXT.CK1", 3411}, {"ENDTEXT.CK1", 902},
-        {"PREVIEWS.CK1", 2112}, {"SCORES.CK1", 204}, {"CTLPANEL.CK1", 44}};
+        {"FINALE.CK1", 8565}, {"HELPTEXT.CK1", 1859}, {"STORYTXT.CK1", 3504}, {"ENDTEXT.CK1", 942},
+        {"PREVIEWS.CK1", 2160}, {"SCORES.CK1", 204}, {"CTLPANEL.CK1", 44}};
     for (unsigned i = 0; i < sizeof t / sizeof t[0]; i++) {
         const AssetFile_T *f = port_find_asset(t[i].name);
         TEST_ASSERT_NOT_NULL_MESSAGE(f, t[i].name);
