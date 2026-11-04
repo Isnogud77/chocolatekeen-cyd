@@ -47,7 +47,7 @@ void input_apply_buttons_at(uint8_t mask, uint32_t nowMs) {
         // The name entry owns the controls: only picker events, nothing held.
         static const uint8_t held[] = {SC_UP, SC_DOWN, SC_LEFT, SC_RIGHT, SC_CTRL, SC_ALT, SC_ENTER, SC_ESC, SC_SPACE, SC_Y, SC_N};
         for (size_t k = 0; k < sizeof held; k++) g_input.key_map[held[k]] = 0;
-        uint8_t sc = letter_picker_step(pressed);
+        uint8_t sc = letter_picker_step(pressed, (g_input.key_scane & 0x80) == 0);
         if (sc) key_event(sc);
         s_prev = mask;
         return;

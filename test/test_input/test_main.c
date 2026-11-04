@@ -44,6 +44,24 @@ static void test_picker_overrides_menu_mapping(void) {
     letter_picker_stop();
 }
 
+static void test_picker_waits_for_consume(void) {
+    play_context_set(false, false);
+    letter_picker_start();
+    input_apply_buttons_at(PORT_BTN_UP, 0);
+    g_input.key_scane = 0; // upstream consumed the first letter
+    input_apply_buttons_at(PORT_BTN_UP | PORT_BTN_LEFT, 5); // wait: UP still held, no new edge
+    input_apply_buttons_at(0, 6);
+    TEST_ASSERT_EQUAL_HEX16(0, g_input.key_scane);
+    input_apply_buttons_at(PORT_BTN_UP, 7);
+    TEST_ASSERT_EQUAL_HEX16(0x0E | 0x80, g_input.key_scane);
+    for (int i = 0; i < 10; i++) input_apply_buttons_at(0, 8 + i); // not consumed
+    TEST_ASSERT_EQUAL_HEX16(0x0E | 0x80, g_input.key_scane);
+    g_input.key_scane = 0;
+    input_apply_buttons_at(0, 30);
+    TEST_ASSERT_EQUAL_HEX16(0x30 | 0x80, g_input.key_scane);
+    letter_picker_stop();
+}
+
 static void test_diagonal_left_up(void) {
     input_apply_buttons(PORT_BTN_LEFT | PORT_BTN_UP);
     TEST_ASSERT_EQUAL(1, g_input.key_map[0x4B]);
@@ -169,6 +187,7 @@ static void test_update_down_hold_status_action(void) {
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_picker_overrides_menu_mapping);
+    RUN_TEST(test_picker_waits_for_consume);
     RUN_TEST(test_diagonal_left_up);
     RUN_TEST(test_both_buttons);
     RUN_TEST(test_release_clears);
