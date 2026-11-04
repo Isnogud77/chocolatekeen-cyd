@@ -439,6 +439,34 @@ void CVort_load_level_data(uint16_t levelnum) {
     /* (e.g. if Keen enters a "random" map from the worldmap while a   */
     /* cheat code is in use). However, most chances are that it would  */
     /* look vastly different than the one on vanilla Keen.             */
+#ifdef ESP32_PORT // ESP32-PORT: a silent return left the stale map (e.g. the world map) in map_data and it got played
+    if (!fp) {
+        port_log("level %u: open %s failed", (unsigned)levelnum, filename);
+        port_report_heap("level open failed");
+        char msg[32];
+        snprintf(msg, sizeof msg, "Level %u failed to load", (unsigned)levelnum);
+        port_fatal(msg);
+    }
+    uint32_t len = CVort_filelength(fp);
+    uint8_t *compressedMapData = (uint8_t*)malloc(sizeof(uint8_t) * len);
+    if (!compressedMapData) {
+        port_log("level %u: malloc(%u) failed", (unsigned)levelnum, (unsigned)len);
+        port_report_heap("level malloc failed");
+        fclose(fp);
+        char msg[32];
+        snprintf(msg, sizeof msg, "Level %u failed to load", (unsigned)levelnum);
+        port_fatal(msg);
+    }
+    if (fread(compressedMapData, len, 1, fp) != 1) {
+        port_log("level %u: read of %u bytes failed", (unsigned)levelnum, (unsigned)len);
+        fclose(fp);
+        free(compressedMapData);
+        char msg[32];
+        snprintf(msg, sizeof msg, "Level %u failed to load", (unsigned)levelnum);
+        port_fatal(msg);
+    }
+    fclose(fp);
+#else
     if (!fp)
         return;
     uint32_t len = CVort_filelength(fp);
@@ -453,9 +481,13 @@ void CVort_load_level_data(uint16_t levelnum) {
         return;
     }
     fclose(fp);
+#endif
 
     // Here, code from Commander Genius is used as-is
     CRLE_expandSwapped((word*)map_data, compressedMapData, 0xFEFE);
+#ifdef ESP32_PORT // ESP32-PORT: upstream never freed this; the map loop reloads LEVEL80 every pass, so the heap ran dry and later loads failed
+    free(compressedMapData);
+#endif
     // We remove the initial DWORD of uncompressed data size
 #ifdef ESP32_PORT // ESP32-PORT: count is in bytes; upstream passed elements (half), harmless only with the 64 KB array
     memmove(map_data, map_data+1, sizeof(map_data)-sizeof(int16_t));
@@ -484,6 +516,13 @@ void CVort_load_level_data(uint16_t levelnum) {
     scroll_y_max = ((map_data[1] - 0xF) << 12) + 0x800;
     ceiling_x = (map_data[0] - 3) << 12;
     ceiling_y = map_data[1] << 12;
+#ifdef ESP32_PORT // ESP32-PORT: heap trend per level load
+    {
+        char where[16];
+        snprintf(where, sizeof where, "level %02u", (unsigned)levelnum);
+        port_report_heap(where);
+    }
+#endif
 }
 
 void CVort_handle_quit() {
