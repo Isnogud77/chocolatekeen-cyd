@@ -158,18 +158,35 @@ void CVort_engine_drawBitmap(uint16_t x, uint16_t y, uint16_t num)
 	engine_isFrameReadyToDisplay = true;
 }
 
-/* Full redraw of the 21x14 tile grid. Replaces upstream's adaptive tile
-   refresh (ATR), which only redrew changed tiles into a page of EGA memory. */
-static void redrawAllTiles(uint16_t initTileIndex)
+/* Redraw of the 21x14 tile grid. In play (levels, world map) every tile is
+   redrawn each frame, which also erases last frame's sprites. Outside play
+   (title, menus, score and text screens) only tiles that changed are redrawn,
+   as upstream's adaptive tile refresh (ATR) did: text and bitmaps that a
+   draw_func put on the screen once then stay until the overlay is cleared,
+   the view scrolls or a sprite was drawn. */
+static uint16_t cellTile[0x126]; // tile drawn in each cell; 0xFFFF = must redraw
+static uint16_t cellOrigin = 0xFFFF; // map index of the top-left cell when cellTile was filled
+static bool spritesDrawn; // last frame drew sprites/tiles over the grid
+
+static void invalidateCells(void) { memset(cellTile, 0xFF, sizeof cellTile); }
+
+static void redrawTiles(uint16_t initTileIndex)
 {
+	bool all = play_context_in_play() || spritesDrawn || initTileIndex != cellOrigin;
+	if (all) invalidateCells();
+	cellOrigin = initTileIndex;
 	for (uint16_t loopVar = 0; loopVar < 0x126; loopVar++)
 	{
 		uint16_t mapTile = (uint16_t)map_data_tiles[initTileIndex + loopVar];
 		if (mapTile < engine_egaHeadGeneral.tileNum) {
-			const uint8_t *src = engine_egaTiles[anim_plane[anim_plane_i][mapTile]];
-			uint8_t *dst = pf + (loopVar / 21) * 16 * PF_W + (loopVar % 21) * 16;
-			for (int cy = 0; cy < 16; cy++, src += 16, dst += PF_W)
-				memcpy(dst, src, 16);
+			uint16_t tile = anim_plane[anim_plane_i][mapTile];
+			if (cellTile[loopVar] != tile) {
+				const uint8_t *src = engine_egaTiles[tile];
+				uint8_t *dst = pf + (loopVar / 21) * 16 * PF_W + (loopVar % 21) * 16;
+				for (int cy = 0; cy < 16; cy++, src += 16, dst += PF_W)
+					memcpy(dst, src, 16);
+				cellTile[loopVar] = tile;
+			}
 		}
 		if (loopVar % 21 == 20)
 			initTileIndex += screen_wrap_single;
@@ -179,11 +196,11 @@ static void redrawAllTiles(uint16_t initTileIndex)
 static void redrawPlayfield(void)
 {
 	if (imageMode) return;
-	redrawAllTiles((((map_width_bytes * ((scroll_y & 16777215) >> 12)) & 65535) >> 1) + ((scroll_x & 16777215) >> 12));
+	redrawTiles((((map_width_bytes * ((scroll_y & 16777215) >> 12)) & 65535) >> 1) + ((scroll_x & 16777215) >> 12));
 }
 
 bool render_image_mode(void) { return imageMode; }
-void render_image_mode_off(void) { imageMode = false; }
+void render_image_mode_off(void) { imageMode = false; invalidateCells(); }
 void render_redraw_for_test(void) { redrawPlayfield(); }
 
 // Window into the playfield, from upstream's EGA start address + panning.
@@ -249,6 +266,7 @@ void CVort_engine_doDrawing()
 		for (loopVar = 0; drawCounter > 0; loopVar++, drawCounter--)
 			CVort_engine_drawBitmap(bmpdraws[loopVar].x, bmpdraws[loopVar].y, bmpdraws[loopVar].bmp_loc);
 	engine_dstPage = origDstPage;
+	spritesDrawn = spritedraws_c || tiledraws_c;
 	if (draw_func)
 		(draw_func)();
 	CVort_private_engine_setEgaMemStartLocAndPanning(engine_egaStart, pel_panning);
@@ -384,11 +402,12 @@ uint16_t CVort_engine_drawTileAt(int32_t pos_x, int32_t pos_y, uint16_t tilenum)
 	return 1;
 }
 
-// verbatim (gfx.c)
+// verbatim (gfx.c), plus the port's tile cache reset
 void CVort_engine_clearOverlay()
 {	// Luckily this is endianness independent!!
 	memset(ATR[0], 0xFF, 2*0x126);
 	memset(ATR[1], 0xFF, 2*0x126);
+	invalidateCells(); // port: the next frame redraws every tile (erases text)
 }
 
 // verbatim (gfx.c)

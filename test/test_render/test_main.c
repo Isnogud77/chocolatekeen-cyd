@@ -168,6 +168,67 @@ static void test_flags_cleared_after_present(void) {
     TEST_ASSERT_EQUAL_INT(LAYOUT_CROP, presentLayout.mode);
 }
 
+/* --- tile cache: outside play only changed tiles are redrawn (upstream ATR) --- */
+static void setupMap(int16_t tile) {
+    map_data_tiles = map_data + 16;
+    for (int i = 0; i < 0x126; i++) map_data_tiles[i] = tile;
+    screen_wrap_single = 0;
+    map_width_bytes = 42;
+    scroll_x = scroll_y = 0;
+    render_image_mode_off();
+    CVort_engine_clearOverlay();
+}
+
+static void test_overlay_stays_outside_play(void) {
+    play_context_set(false, false);
+    setupMap(0);
+    render_redraw_for_test();
+    TEST_ASSERT_EQUAL_UINT8(5, at(0, 0));
+    pf[0] = 9; // text drawn once by a draw_func
+    render_redraw_for_test();
+    TEST_ASSERT_EQUAL_UINT8(9, at(0, 0));
+}
+
+static void test_changed_tile_redrawn_outside_play(void) {
+    play_context_set(false, false);
+    setupMap(0);
+    render_redraw_for_test();
+    pf[0] = 9;
+    map_data_tiles[0] = 1;
+    render_redraw_for_test();
+    TEST_ASSERT_EQUAL_UINT8(0xFF, at(0, 0));
+}
+
+static void test_clear_overlay_erases_text(void) {
+    play_context_set(false, false);
+    setupMap(0);
+    render_redraw_for_test();
+    pf[0] = 9;
+    CVort_engine_clearOverlay();
+    render_redraw_for_test();
+    TEST_ASSERT_EQUAL_UINT8(5, at(0, 0));
+}
+
+static void test_scroll_redraws_all(void) {
+    play_context_set(false, false);
+    setupMap(0);
+    render_redraw_for_test();
+    pf[0] = 9;
+    scroll_x = 0x1000; // one tile right
+    render_redraw_for_test();
+    TEST_ASSERT_EQUAL_UINT8(5, at(0, 0));
+}
+
+static void test_in_play_redraws_every_frame(void) {
+    setupMap(0);
+    play_context_set(true, true);
+    render_redraw_for_test();
+    pf[0] = 9;
+    render_redraw_for_test();
+    play_context_set(false, false);
+    TEST_ASSERT_EQUAL_UINT8(5, at(0, 0));
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_rgb565_white);
@@ -186,5 +247,10 @@ int main(void) {
     RUN_TEST(test_present_after_redraw_crops);
     RUN_TEST(test_present_redraw_outside_play_scales);
     RUN_TEST(test_flags_cleared_after_present);
+    RUN_TEST(test_overlay_stays_outside_play);
+    RUN_TEST(test_changed_tile_redrawn_outside_play);
+    RUN_TEST(test_clear_overlay_erases_text);
+    RUN_TEST(test_scroll_redraws_all);
+    RUN_TEST(test_in_play_redraws_every_frame);
     return UNITY_END();
 }

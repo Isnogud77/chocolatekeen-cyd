@@ -2,8 +2,9 @@
 //
 // Upstream draws into a 384-byte-wide EGA buffer; the visible tile grid
 // (21 x 14 tiles) starts at buffer (32, 32). We keep only that grid as an
-// 8-bit playfield (pf) and redraw it fully every frame. The 320x200 window
-// inside it moves by the 0-15 px fine scroll.
+// 8-bit playfield (pf). In play it is redrawn fully every frame; outside play
+// only changed tiles are redrawn (like upstream's ATR), so text drawn once
+// stays. The 320x200 window inside it moves by the 0-15 px fine scroll.
 #ifndef PORT_RENDER_H
 #define PORT_RENDER_H
 
@@ -25,7 +26,7 @@ void render_mark_full_redraw(void);        // doDrawing redrew the playfield (la
 // tile redraw is skipped until a level is loaded.
 bool render_image_mode(void);
 void render_image_mode_off(void);
-void render_redraw_for_test(void);         // the tile-redraw step of doDrawing (honours image mode)
+void render_redraw_for_test(void);         // the tile-redraw step of doDrawing (honours image mode, tile cache)
 
 // Upstream gfx.c internal, kept with its name (also used by tests).
 void CVort_private_engine_setEgaMemStartLocAndPanning(uint32_t egaStart, uint16_t panning);
