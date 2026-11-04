@@ -464,6 +464,11 @@ bool CVort_isWaitingForCharInput(void) {
     return g_isWaitingForCharInput;
 }
 
+// ESP32-PORT: test seam, the flag is static here and only set inside read_char_with_echo
+void CVort_test_setWaitingForCharInput(bool waiting) {
+    g_isWaitingForCharInput = waiting;
+}
+
 void CVort_draw_string(const char *str) {
     while (*str) {
         if (*str == CHAR_LINEFEED) {

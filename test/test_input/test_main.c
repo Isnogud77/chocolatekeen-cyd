@@ -184,8 +184,33 @@ static void test_update_down_hold_status_action(void) {
     TEST_ASSERT_TRUE(CK_Action_IsHeld(CK_ACTION_STATUS));
 }
 
+// A character prompt in play (quit, sound...) answers with menu keys: b1 = Y, b2 = Esc.
+static void test_char_wait_in_play_maps_menu_keys(void) {
+    play_context_set(true, true);
+    CVort_test_setWaitingForCharInput(true);
+    input_apply_buttons_at(PORT_BTN_JUMP, 0);
+    TEST_ASSERT_EQUAL_HEX(0x15 | 0x80, g_input.key_scane);
+    TEST_ASSERT_EQUAL(0, g_input.key_map[0x1D]);
+    input_apply_buttons_at(0, 10);
+    g_input.key_scane = 0;
+    input_apply_buttons_at(PORT_BTN_POGO, 20);
+    TEST_ASSERT_EQUAL_HEX(0x81, g_input.key_scane);
+    TEST_ASSERT_EQUAL(0, g_input.key_map[0x38]);
+    CVort_test_setWaitingForCharInput(false);
+}
+static void test_not_char_waiting_in_play_maps_ctrl_alt(void) {
+    play_context_set(true, true);
+    CVort_test_setWaitingForCharInput(false);
+    input_apply_buttons_at(PORT_BTN_JUMP | PORT_BTN_POGO, 0);
+    TEST_ASSERT_EQUAL(1, g_input.key_map[0x1D]);
+    TEST_ASSERT_EQUAL(1, g_input.key_map[0x38]);
+    TEST_ASSERT_EQUAL_HEX(0, g_input.key_scane);
+}
+
 int main(void) {
     UNITY_BEGIN();
+    RUN_TEST(test_char_wait_in_play_maps_menu_keys);
+    RUN_TEST(test_not_char_waiting_in_play_maps_ctrl_alt);
     RUN_TEST(test_picker_overrides_menu_mapping);
     RUN_TEST(test_picker_waits_for_consume);
     RUN_TEST(test_diagonal_left_up);

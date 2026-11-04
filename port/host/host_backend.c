@@ -96,6 +96,11 @@ static uint8_t frontEndScript(char which, uint32_t t) {
     return 0;
 }
 
+static uint32_t keenAutoAt(void) {
+    const char *at = getenv("KEEN_AUTO_AT");
+    return at ? (uint32_t)atoi(at) : 30000;
+}
+
 static uint8_t autoButtons(void) {
     const char *a = getenv("KEEN_AUTO");
     if (!a) return 0;
@@ -106,10 +111,22 @@ static uint8_t autoButtons(void) {
     if (strchr(a, 'C')) return frontEndScript('C', t);
     if (strchr(a, 'M')) {
         if (t < 3000) return 0;
+        // With D/X Keen stands still 1.5 s before the hold (and nothing else is pressed after it).
+        if ((strchr(a, 'D') || strchr(a, 'X')) && t >= keenAutoAt() - 1500) {
+            if (t < keenAutoAt() || t >= keenAutoAt() + 1400) return 0;
+            return strchr(a, 'D') ? PORT_BTN_DOWN : PORT_BTN_POGO;
+        }
         if (t < 13000) return (t - 3000) % 2000 < 300 ? PORT_BTN_JUMP : 0;
         b |= PORT_BTN_RIGHT;
         if (t < 25000 && t % 1500 >= 700 && t % 1500 < 850) b |= PORT_BTN_DOWN;
         if (t % 1500 < 300) b |= PORT_BTN_JUMP;
+    }
+    // "D"/"X" (text box checks): hold Down / button 2 for 1.4 s from KEEN_AUTO_AT ms
+    // (a long press opens the status screen / the in-game menu).
+    uint32_t t0 = keenAutoAt();
+    if (t >= t0 && t < t0 + 1400) {
+        if (strchr(a, 'D')) b |= PORT_BTN_DOWN;
+        if (strchr(a, 'X')) b |= PORT_BTN_POGO;
     }
     if (strchr(a, 'R')) b |= PORT_BTN_RIGHT;
     if (strchr(a, 'J') && t % 1500 < 300) b |= PORT_BTN_JUMP;

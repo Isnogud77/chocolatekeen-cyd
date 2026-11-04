@@ -229,6 +229,22 @@ static void test_in_play_redraws_every_frame(void) {
     TEST_ASSERT_EQUAL_UINT8(5, at(0, 0));
 }
 
+// A text box waiting for a key in play (status screen, quit prompt) only blinks
+// its cursor: presenting that frame must not redraw the tiles over the box.
+static void test_box_survives_cursor_blink_in_play(void) {
+    setupMap(0);
+    play_context_set(true, true);
+    render_redraw_for_test();
+    pf[0] = 9; // box pixel
+    for (int i = 0; i < 3; i++) {
+        CVort_engine_drawChar(40, 0, 9 + i); // cursor frame, far from the box pixel
+        CVort_engine_updateActualDisplay();
+    }
+    play_context_set(false, false);
+    TEST_ASSERT_EQUAL_UINT8(9, at(0, 0));
+    CVort_engine_clearOverlay();
+}
+
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_rgb565_white);
@@ -252,5 +268,6 @@ int main(void) {
     RUN_TEST(test_clear_overlay_erases_text);
     RUN_TEST(test_scroll_redraws_all);
     RUN_TEST(test_in_play_redraws_every_frame);
+    RUN_TEST(test_box_survives_cursor_blink_in_play);
     return UNITY_END();
 }
