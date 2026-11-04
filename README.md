@@ -16,6 +16,12 @@ storage layer that fits into an ESP32 without PSRAM.
 
 ## Hardware
 
+The easiest way to get all of it is the
+**[CYD Galagino Arcade Cabinet](https://www.hackster.io/dynamight/cyd-galagino-arcade-cabinet-369ce9)**
+build on Hackster: it covers the parts, the 3D-printed cabinet and the control
+board. Build that, then flash this firmware instead of Galagino —
+use the `cyd_portrait` env for its upright cabinet.
+
 | Part | Notes |
 |---|---|
 | ESP32-2432S028R ("CYD", tested: the CYD2USB variant with USB-C + Micro-USB) | ESP32-WROOM-32, 4 MB flash, no PSRAM, 2.8" 320×240 ST7789 |
@@ -100,6 +106,9 @@ the world map; **Continue Game** resumes. Details: [docs/controls.md](docs/contr
   authors NY00123, QuantumG and Lemm; the repository this port is based on is
   maintained by James Mackenzie. It includes decompression code from Commander
   Genius. GPL-2.0 — this port is GPL-2.0 as well, see [LICENSE](LICENSE).
+- Hardware, 3D-printed cabinet and control board:
+  [CYD Galagino Arcade Cabinet](https://www.hackster.io/dynamight/cyd-galagino-arcade-cabinet-369ce9)
+  by dynamight on Hackster.
 - Commander Keen is a trademark of id Software. The Episode 1 game data in
   `data/KEEN1` is the freely distributable shareware release, as shipped by
   Chocolate Keen. Episodes 2 and 3 are not included.
