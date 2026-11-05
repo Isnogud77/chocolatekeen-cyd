@@ -22,6 +22,9 @@ build on Hackster: it covers the parts, the 3D-printed cabinet and the control
 board. Build that, then flash this firmware instead of Galagino —
 use the `cyd_portrait` env for its upright cabinet.
 
+Alternative case for the same parts: a 90s beige CRT-and-keyboard all-in-one
+(landscape), see [docs/case-crt.md](docs/case-crt.md).
+
 | Part | Notes |
 |---|---|
 | ESP32-2432S028R ("CYD", tested: the CYD2USB variant with USB-C + Micro-USB) | ESP32-WROOM-32, 4 MB flash, no PSRAM, 2.8" 320×240 ST7789 |
