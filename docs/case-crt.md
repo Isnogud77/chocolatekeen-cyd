@@ -7,14 +7,16 @@ the joystick and the two square keys are real.
 
 ![front](../cad/print-crt/front.png) ![iso](../cad/print-crt/iso.png)
 
-- Design file: [cad/keen-crt-landscape.sc](../cad/keen-crt-landscape.sc) (SolidCraft, every size is a named parameter)
+- Design file: [cad/keen-crt-landscape.sc](../cad/keen-crt-landscape.sc) (SolidCraft; every shell size is a named parameter. The dark detail parts are placed at the current values of `deck_ang`, `face_ang` and `H_front`; if you change those, move the detail parts too)
 - Print files: [cad/print-crt/](../cad/print-crt/)
 - Firmware: landscape, `pio run -e cyd -t upload`
 - Size: 104 × 117 × 114 mm (W × D × H)
 
 ## Parts to print
 
-PLA, 0.2 mm layers, no supports.
+PLA, 0.2 mm layers, no supports. The STLs are exported where the part sits in the
+assembled case (the Bezel tilted 10°, the Deck 8°, …), so lay each part onto the
+face named below in the slicer ("place on face").
 
 | File | Colour | Print orientation |
 |---|---|---|
@@ -35,10 +37,10 @@ PLA, 0.2 mm layers, no supports.
 
 | Part | Qty |
 |---|---|
-| M3 self-tapping screw, 6 mm (CYD to Bezel) | 4 |
+| M3 self-tapping screw, 5 mm (CYD to Bezel; the pilots are 4 mm deep blind holes) | 4 |
 | M2 self-tapping screw, 6 mm (control board to Deck) | 4 |
 | M2 self-tapping screw, 8 mm (back hatch) | 2 |
-| M2 self-tapping screw, 4 mm (slide switch to Back, from inside) | 2 |
+| M2 self-tapping screw, 3 mm (slide switch to Back, from inside) | 2 |
 | 3 mm LED + 220 Ω resistor, between 3.3 V and GND on CN1 (lights whenever the unit is on, no firmware change) | 1 |
 | Rubber foot, 10 mm diameter, max 1 mm recess | 4 |
 | 35 mm speaker, USB-C panel socket, slide switch | as in the Galagino build |
@@ -48,7 +50,8 @@ PLA, 0.2 mm layers, no supports.
 
 1. **Keyboard.** Put KeyCap1 and KeyCap2 into the square holes of the Deck from below. The flange stays under the deck.
    Screw the control board to the four standoffs under the Deck (M2), pressing the switch shafts into the caps.
-   Press the JoyCap onto the 5-way switch and glue the KeyField into its pocket.
+   Glue the KeyField onto the Deck (it sits on the flat deck, 4 mm in from its edges, over the caps),
+   then press the JoyCap onto the 5-way switch through the KeyField's round hole.
    The control board cannot be removed after the next step, so solder a 4-pin plug
    (3.3 V, GND, SDA, SCL) on its cable first.
 2. **Shell.** Glue SideLeft, Bottom, Front, Deck, Bezel and Top together, then SideRight.
@@ -60,8 +63,15 @@ PLA, 0.2 mm layers, no supports.
    other way on your board, flip `cyd_off` in the design and re-export the Bezel.
 5. **Back hatch.** Glue the speaker into the ring, fit the USB-C socket and screw the slide switch on.
    Wire everything up.
-6. **Close.** Slide the hatch's bottom tongue forward under the lip on the Bottom and lay the hatch into
-   its rabbets. Screw it to the two tabs under the Top (M2). To open it, undo the two screws and pull the hatch
+6. **Close.** Hold the hatch level with the case and slide it straight forward (horizontally, without tilting),
+   so its bottom tongue goes under the lip on the Bottom while its edges run into the rabbets.
+   Screw it to the two tabs under the Top (M2). To open it, undo the two screws and pull the hatch
    straight back.
+
+## Flashing
+
+The CYD's USB port cannot be reached with the hatch on: the board sits 3–9 mm from the side
+walls, too close for a plug. To flash: open the hatch, unscrew the CYD and plug in with the
+wires still attached. The USB-C socket on the back is for power only (wired, as in the Galagino build).
 
 Controls and pin map: [controls.md](controls.md).

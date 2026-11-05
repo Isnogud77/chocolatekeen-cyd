@@ -14,7 +14,7 @@ The keyboard is only the control-board housing; its keys are decorative.
 | Shape | all-in-one: keyboard and monitor share one shell, no swivel foot |
 | Orientation | landscape (firmware env `cyd`) |
 | Construction | flat panels between two profile sides, glued |
-| Joints | grooves in the sides + 2 mm pegs, half-lap notches between panels |
+| Joints | 1 mm rabbets (open steps) in the sides; panels butt-glued to each other on design lines (pegs and half-laps dropped, see Joints) |
 | Screws | components only (CYD 4x M3, control PCB 4x M2) + 2x M2 on the back hatch |
 | Printer | single colour: beige shell, dark detail parts printed separately and glued/pressed in |
 | Extras | fake floppy slot, 3 mm power LED, badge recess, vent slots |
@@ -39,7 +39,7 @@ All values are named user parameters in the SolidCraft file. Starting values:
 |---|---|---|
 | `W` | 104 | outer width |
 | `wall` | 2.4 | panel thickness (deck, bezel, top, back, bottom, front) |
-| `side_t` | 3 | side panel thickness (holds the 1 mm grooves) |
+| `side_t` | 3 | side panel thickness (holds the 1 mm rabbets) |
 | `H_front` | 16 | keyboard front height |
 | `deck_d` | 48 | keyboard depth (horizontal) |
 | `deck_ang` | 8 deg | keyboard slope |
@@ -65,10 +65,10 @@ Shell (beige):
 
 | Part | Features | Fixing |
 |---|---|---|
-| SideLeft / SideRight | full profile, inner grooves 1 mm deep (`wall + 0.3` wide) for every panel, peg holes, vent slots top rear | glued |
+| SideLeft / SideRight | full profile, 1 mm deep rabbets (`wall + 0.3` wide, open to the outside) for every panel, vent slots top rear | glued |
 | Bottom | rubber-foot recesses, lip for the hatch hook | glued |
 | Front | keyboard lip | glued |
-| Deck | pocket for KeyField, joystick + 2 cap holes through deck and KeyField, 4x M2 standoffs below | glued (with PCB already screwed on) |
+| Deck | flat top (KeyField glued on top), joystick + 2 square cap holes, 4x M2 standoffs below | glued (with PCB already screwed on) |
 | Bezel | chin + screen face, window + bevel, badge recess, floppy opening, LED hole 3.1, 4x M3 CYD standoffs; lower edge forms the step | glued |
 | Top | vent slots, rounded front edge, 2 screw tabs for the hatch | glued |
 | Back | speaker grille + speaker ring, USB-C cutout, slide switch slot + 2 pilot holes, hook on the lower edge | 2x M2 into the Top tabs |
@@ -77,7 +77,7 @@ Detail parts (dark):
 
 | Part | Features |
 |---|---|
-| KeyField | plate with raised fake keys (1.5 mm proud, 0.4 mm gaps), cutouts for the real controls; glued into the Deck pocket |
+| KeyField | plate with raised fake keys (1.5 mm proud, 0.4 mm gaps), cutouts for the real controls; glued on top of the Deck, 4 mm in from its edges |
 | KeyCap x2 | square 9 mm cap, 3.1 mm press-fit socket, retaining flange under the deck |
 | JoyCap | low square cap on the 5-way stem |
 | FloppyInsert | slot face with eject bump, 0.2 mm press fit into the Bezel |
@@ -85,18 +85,24 @@ Detail parts (dark):
 
 ## Joints
 
-- Every panel end sits in a 1 mm groove in each side (self-squaring, large glue area)
-  and carries two 2.0 mm pegs into 2.4 mm blind holes in the groove floor.
-- Panel-to-panel edges (Front/Deck, Deck/Bezel, Bezel/Top) are half-lap notches so
-  the seam sits on a design line and is hidden.
-- The Back hatch hooks under the Bottom lip and is held by 2x M2 self-tapping screws
+- Every panel end sits 0.9 mm deep in a 1 mm rabbet along the inside edge of each side.
+  The rabbet is open to the outside, so the panel's outer face is flush with the side's
+  outline; the rabbets square the case. (Closed grooves would need the sides to stand
+  proud of the panels.)
+- No pegs: a 2 mm peg on a 2.4 mm panel edge leaves under 0.4 mm of wall on the outside.
+  The panels form a closed loop between two rabbets and locate each other; tape them while
+  the glue sets.
+- Panel-to-panel edges are plain butt joints on design lines (floor, keyboard front,
+  step, top rounding tangent, back plane); half-laps were dropped.
+- The Back hatch slides straight forward: a tongue on its lower edge goes under an
+  L-shaped lip on the Bottom (0.5 mm clearance above, 0.1 mm below) and is held by 2x M2 self-tapping screws
   (1.8 mm pilots) into tabs on the Top. Speaker, USB-C socket and switch are mounted
   on the hatch.
 
 ## Assembly
 
-1. Screw the control PCB to the Deck (4x M2), press the KeyCaps and JoyCap on, glue the
-   KeyField into its pocket.
+1. Put the KeyCaps into the Deck from below, screw the control PCB to the Deck (4x M2),
+   glue the KeyField on, then press the JoyCap on through the KeyField.
 2. Glue the shell: sides, Bottom, Front, Deck, Bezel, Top. Back stays off.
 3. Press in FloppyInsert, Badge and the LED.
 4. Screw the CYD to the Bezel standoffs (4x M3) through the back opening.
@@ -122,7 +128,7 @@ be disconnected. This is accepted.
 ## Printing
 
 All shell panels print flat (outside or inside face down), no supports. Vent slots run
-along the print direction. Sides print with the grooves facing up.
+along the print direction. Sides print with the rabbets facing up.
 
 ## Verification
 
