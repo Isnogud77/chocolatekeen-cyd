@@ -20,7 +20,7 @@ face named below in the slicer ("place on face").
 
 | File | Colour | Print orientation |
 |---|---|---|
-| SideLeft, SideRight | beige | outside face down (rabbets face up) |
+| SideLeft, SideRight | beige | outside face down (rabbets and pegs face up) |
 | Bottom | beige | outside face down |
 | Front | beige | inside face down |
 | Deck | beige | outside (top) face down |
@@ -55,8 +55,12 @@ face named below in the slicer ("place on face").
    The control board cannot be removed after the next step, so solder a 4-pin plug
    (3.3 V, GND, SDA, SCL) on its cable first.
 2. **Shell.** Glue SideLeft, Bottom, Front, Deck, Bezel and Top together, then SideRight.
-   Every panel sits in a 1 mm step (rabbet) along the inside edge of each side,
-   which squares the case. Tape it while the glue sets. Leave the Back off.
+   Every panel sits in a 1 mm step (rabbet) along the inside edge of each side.
+   Each panel also has a block on its inner face at both ends with a 2.4 mm hole
+   (two per end on the Bottom, Deck and Bezel, one on the Front and Top); the sides
+   carry matching 2 mm pegs. Glue the panels to each other first, then push each
+   side on straight across: its 8 pegs go into the blocks and the panel edges drop
+   into the rabbets. Put a drop of glue in each hole. Leave the Back off (no pegs; it comes off).
 3. **Front details.** Press the FloppyInsert and the Badge into the chin. Push the LED into its hole from behind and glue it.
 4. **CYD.** Screw the CYD to the four standoffs behind the screen window (M3) through the back opening.
    The hole pattern sits 2.85 mm right of the window centre; if the display is off-centre the

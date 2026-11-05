@@ -14,7 +14,7 @@ The keyboard is only the control-board housing; its keys are decorative.
 | Shape | all-in-one: keyboard and monitor share one shell, no swivel foot |
 | Orientation | landscape (firmware env `cyd`) |
 | Construction | flat panels between two profile sides, glued |
-| Joints | 1 mm rabbets (open steps) in the sides; panels butt-glued to each other on design lines (pegs and half-laps dropped, see Joints) |
+| Joints | 1 mm rabbets (open steps) in the sides + 2 mm pegs from the sides into blocks on the panels; panels butt-glued to each other on design lines (half-laps dropped) |
 | Screws | components only (CYD 4x M3, control PCB 4x M2) + 2x M2 on the back hatch |
 | Printer | single colour: beige shell, dark detail parts printed separately and glued/pressed in |
 | Extras | fake floppy slot, 3 mm power LED, badge recess, vent slots |
@@ -89,9 +89,12 @@ Detail parts (dark):
   The rabbet is open to the outside, so the panel's outer face is flush with the side's
   outline; the rabbets square the case. (Closed grooves would need the sides to stand
   proud of the panels.)
-- No pegs: a 2 mm peg on a 2.4 mm panel edge leaves under 0.4 mm of wall on the outside.
-  The panels form a closed loop between two rabbets and locate each other; tape them while
-  the glue sets.
+- Pegs: 2.0 mm pegs, 3 mm long (`peg_d`, `peg_len`), on the inner face of each side, all
+  pointing across the case, go into 2.4 mm holes (`peg_hole_d`, 3.3 deep) in blocks on the
+  panels' inner faces (8 along the panel x 4 thick x `boss_x` 8.9 across, 0.1 mm short of
+  the side). Two blocks per end on Bottom, Deck and Bezel (Bezel: chin and above the CYD),
+  one on Front and Top: 8 pegs per side. Pegs on the panel edges themselves were rejected
+  (under 0.4 mm of wall left outside). The Back hatch has no pegs.
 - Panel-to-panel edges are plain butt joints on design lines (floor, keyboard front,
   step, top rounding tangent, back plane); half-laps were dropped.
 - The Back hatch slides straight forward: a tongue on its lower edge goes under an
