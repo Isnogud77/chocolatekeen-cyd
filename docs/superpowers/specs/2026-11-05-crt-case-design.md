@@ -77,7 +77,7 @@ Detail parts (dark):
 
 | Part | Features |
 |---|---|
-| KeyField | plate with raised fake keys (1.5 mm proud, 0.4 mm gaps), cutouts for the real controls; glued on top of the Deck, 4 mm in from its edges |
+| KeyField | plate with raised fake keys (1.5 mm proud, 0.4 mm gaps), cutouts for the real controls, tapered keycaps (15 deg), staggered middle row with 1.5u ends, raised rim around the joystick, rounded corners; glued on top of the Deck |
 | KeyCap x2 | square 9 mm cap, 3.1 mm press-fit socket, retaining flange under the deck |
 | JoyCap | low square cap on the 5-way stem |
 | FloppyInsert | slot face with eject bump, 0.2 mm press fit into the Bezel |

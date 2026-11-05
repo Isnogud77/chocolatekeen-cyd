@@ -20,18 +20,22 @@ face named below in the slicer ("place on face").
 
 | File | Colour | Print orientation |
 |---|---|---|
-| SideLeft, SideRight | beige | outside face down (rabbets and pegs face up) |
-| Bottom | beige | outside face down |
-| Front | beige | inside face down |
-| Deck | beige | outside (top) face down |
-| Bezel | beige | front face down |
-| Top | beige | outside face down; the front rounding gives a short overhang on the first few layers |
-| Back | beige | outside face down |
-| KeyField | dark | plate down |
-| KeyCap1, KeyCap2 | dark | flange down |
-| JoyCap | dark | top down |
-| FloppyInsert | dark | back face down |
-| Badge | dark | plate down, text up |
+| SideLeft, SideRight | cream white | outside face down (rabbets and pegs face up) |
+| Bottom | cream white | outside face down |
+| Front | cream white | inside face down |
+| Deck | cream white | outside (top) face down |
+| Bezel | cream white | front face down |
+| Top | cream white | outside face down; the front rounding gives a short overhang on the first few layers |
+| Back | cream white | outside face down |
+| KeyField | light beige (a shade darker than the case) | plate down |
+| KeyCap1, KeyCap2 | warm grey | flange down |
+| JoyCap | black | top down |
+| FloppyInsert | charcoal | back face down |
+| Badge + BadgeText | black plate, Keen-blue text | plate down, text up. Two colours in one print: load `Badge-2colour.3mf` (multi-colour printer), or print `Badge.stl` + `BadgeText.stl` together and change filament at 1.6 mm (where the plate ends and the letters start) |
+| Foot (print 4) | TPU, any colour (black in the renders) | flat side down (chamfer up); 9.6 mm disc, 3 mm tall: 1 mm sits in the recess, 2 mm stands proud. Press in, a drop of CA glue holds it |
+
+The design also holds two display-only bodies for renders, `RenderScreen` (screen glass), the
+`RenderScreenImage` mesh (a level 1 frame as coloured pixel tiles, so ray-traced renders show it) and `RenderLED` (green power LED). They are not printed.
 
 ## Hardware
 
@@ -42,7 +46,6 @@ face named below in the slicer ("place on face").
 | M2 self-tapping screw, 8 mm (back hatch) | 2 |
 | M2 self-tapping screw, 3 mm (slide switch to Back, from inside) | 2 |
 | 3 mm LED + 220 Ω resistor, between 3.3 V and GND on CN1 (lights whenever the unit is on, no firmware change) | 1 |
-| Rubber foot, 10 mm diameter, max 1 mm recess | 4 |
 | 35 mm speaker, USB-C panel socket, slide switch | as in the Galagino build |
 | Glue for PLA (CA or plastic cement) | |
 
@@ -50,7 +53,7 @@ face named below in the slicer ("place on face").
 
 1. **Keyboard.** Put KeyCap1 and KeyCap2 into the square holes of the Deck from below. The flange stays under the deck.
    Screw the control board to the four standoffs under the Deck (M2), pressing the switch shafts into the caps.
-   Glue the KeyField onto the Deck (it sits on the flat deck, 4 mm in from its edges, over the caps),
+   Glue the KeyField onto the Deck (it sits on the flat deck, 2.5 mm in from the sides, over the caps),
    then press the JoyCap onto the 5-way switch through the KeyField's round hole.
    The control board cannot be removed after the next step, so solder a 4-pin plug
    (3.3 V, GND, SDA, SCL) on its cable first.
@@ -61,7 +64,7 @@ face named below in the slicer ("place on face").
    carry matching 2 mm pegs. Glue the panels to each other first, then push each
    side on straight across: its 8 pegs go into the blocks and the panel edges drop
    into the rabbets. Put a drop of glue in each hole. Leave the Back off (no pegs; it comes off).
-3. **Front details.** Press the FloppyInsert and the Badge into the chin. Push the LED into its hole from behind and glue it.
+3. **Front details.** Press the FloppyInsert and the Badge ("COMMANDER / KEEN", Georgia Bold) into the chin. Push the LED into its hole from behind and glue it.
 4. **CYD.** Screw the CYD to the four standoffs behind the screen window (M3) through the back opening.
    The hole pattern sits 2.85 mm right of the window centre; if the display is off-centre the
    other way on your board, flip `cyd_off` in the design and re-export the Bezel.
