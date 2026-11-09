@@ -114,7 +114,8 @@ the world map; **Continue Game** resumes. Details: [docs/controls.md](docs/contr
 - `port/` — the new platform layer:
   - `render.c` replaces upstream's emulated EGA memory (393 KB) with a
     336×224 8-bit playfield that is redrawn every frame; `screen_layout.c`
-    turns it into a landscape picture or a portrait window that follows Keen.
+    turns it into a landscape picture (stretched to 4:3 like a DOS CRT) or a
+    portrait window that follows Keen.
   - `esp32/` drives the ST7789 over SPI DMA, the MCP23017 over I2C, the
     speaker (DAC square wave on a hardware timer) and NVS storage; `host/` is
     the SDL2 equivalent.

@@ -15,7 +15,7 @@ int screen_layout_screen_h(void) { return portrait ? 320 : 240; }
 
 ScreenLayout_T screen_layout_frame(bool textDrawn, bool fullRedraw, bool inPlay, int keenX) {
     if (!portrait)
-        return (ScreenLayout_T){LAYOUT_LANDSCAPE, 320, 240, 320, 200, 20, 0};
+        return (ScreenLayout_T){LAYOUT_LANDSCAPE, 320, 240, 320, 240, 0, 0};
     if (textDrawn || !inPlay)
         lastMode = LAYOUT_SCALE;
     else if (fullRedraw)
@@ -34,6 +34,7 @@ void screen_layout_row(const ScreenLayout_T *l, const uint8_t *src, int stride, 
         for (int x = 0; x < l->outW; x++) out[x] = pal[row[x * 4 / 3] & 15];
         return;
     }
+    if (l->mode == LAYOUT_LANDSCAPE) y = y * 5 / 6; // 200 -> 240 lines: 4:3 like a DOS CRT
     const uint8_t *row = src + y * stride + l->cropX;
     for (int x = 0; x < l->outW; x++) out[x] = pal[row[x] & 15];
 }

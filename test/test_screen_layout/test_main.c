@@ -24,17 +24,22 @@ static void assertLayout(ScreenLayout_T l, LayoutMode_T mode, int sw, int sh, in
 
 static void test_landscape_layout(void) {
     screen_layout_set_portrait(false);
-    assertLayout(screen_layout_frame(true, true, true, 160), LAYOUT_LANDSCAPE, 320, 240, 320, 200, 20, 0);
-    assertLayout(screen_layout_frame(false, false, true, 0), LAYOUT_LANDSCAPE, 320, 240, 320, 200, 20, 0);
+    assertLayout(screen_layout_frame(true, true, true, 160), LAYOUT_LANDSCAPE, 320, 240, 320, 240, 0, 0);
+    assertLayout(screen_layout_frame(false, false, true, 0), LAYOUT_LANDSCAPE, 320, 240, 320, 240, 0, 0);
     TEST_ASSERT_EQUAL_INT(320, screen_layout_screen_w());
     TEST_ASSERT_EQUAL_INT(240, screen_layout_screen_h());
 }
 
-static void test_landscape_row_is_identity(void) {
+// Landscape stretches 200 lines to 240 (4:3, like a DOS CRT): output row y
+// shows source row y * 5 / 6, so every 5th source row appears twice.
+static void test_landscape_row_stretches_200_to_240(void) {
     screen_layout_set_portrait(false);
     ScreenLayout_T l = screen_layout_frame(false, true, true, 0);
-    screen_layout_row(&l, src, 320, 5, pal, out);
-    for (int x = 0; x < 320; x++) TEST_ASSERT_EQUAL_HEX16(pal[src[5 * 320 + x]], out[x]);
+    const int cases[][2] = {{0, 0}, {1, 0}, {5, 4}, {6, 5}, {7, 5}, {120, 100}, {239, 199}};
+    for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+        screen_layout_row(&l, src, 320, cases[i][0], pal, out);
+        for (int x = 0; x < 320; x++) TEST_ASSERT_EQUAL_HEX16(pal[src[cases[i][1] * 320 + x]], out[x]);
+    }
 }
 
 static void test_portrait_game_frame_crops(void) {
@@ -115,7 +120,7 @@ static void test_scale_row_mapping(void) {
 int main(void) {
     UNITY_BEGIN();
     RUN_TEST(test_landscape_layout);
-    RUN_TEST(test_landscape_row_is_identity);
+    RUN_TEST(test_landscape_row_stretches_200_to_240);
     RUN_TEST(test_portrait_game_frame_crops);
     RUN_TEST(test_portrait_text_frame_scales);
     RUN_TEST(test_text_wins_over_redraw);

@@ -1,4 +1,5 @@
-// Per-frame screen layout: landscape (320x200 picture on 320x240), or portrait
+// Per-frame screen layout: landscape (320x200 stretched to 320x240, the 4:3
+// shape of a DOS CRT), or portrait
 // (240x320) where game frames show a 240x200 window following Keen and frames
 // with text/bitmaps are scaled 3:4 to 240x150. No platform code.
 #ifndef PORT_SCREEN_LAYOUT_H
